@@ -32,7 +32,9 @@ uint8_t* waylandPixel;
 uint16_t width = 200;
 uint16_t height = 100;
 
-uint8_t c;
+uint8_t tick;
+
+uint8_t shouldWindowClose;
 
 // allocate shared memory
 int32_t wlAllocSharedMemory(uint64_t size) {
@@ -63,7 +65,7 @@ void wlResize() {
 }
 
 void draw() {
-    memset(waylandPixel, c, width*height*4);
+    memset(waylandPixel, tick, width*height*4);
 
     wl_surface_attach(waylandSurface, waylandBuffer, 0,0);
     wl_surface_damage_buffer(waylandSurface, 0,0, width,height);
@@ -77,7 +79,7 @@ void newFrame(void* data, struct wl_callback* waylandCallback, uint32_t callback
     waylandCallback = wl_surface_frame(waylandSurface);
     wl_callback_add_listener(waylandCallback, &waylandCallbackListener, 0);
 
-    ++c;
+    ++tick;
     draw();
 }
 
@@ -102,7 +104,7 @@ void xdgTopLevelConf(void* data, struct xdg_toplevel* xdgTopLevel, int32_t width
 }
 
 void xdgTopLevelClose(void* data, struct xdg_toplevel* xdgTopLevel) {
-
+    shouldWindowClose = 1;
 }
 
 struct xdg_toplevel_listener xdgTopLevelListener = {
@@ -162,7 +164,10 @@ int8_t wlPlatformInit(const char* title, int32_t targwidth, int32_t targheight) 
 
     wl_surface_commit(waylandSurface);
 
-    while(wl_display_dispatch(waylandDisplay));
+    while(wl_display_dispatch(waylandDisplay)) {
+        if (shouldWindowClose)
+            break;
+    }
 
     return 0;
 }
