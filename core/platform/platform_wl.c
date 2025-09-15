@@ -200,8 +200,6 @@ struct wl_keyboard_listener waylandKeyboardListener = {
 
 void wlSeatCap(void* data, struct wl_seat* waylandSeat, uint32_t cap) {
     (void)data;
-    (void)waylandSeat;
-    (void)cap;
 
     if (cap & WL_SEAT_CAPABILITY_KEYBOARD && !waylandKeyboard) {
         waylandKeyboard = wl_seat_get_keyboard(waylandSeat);
