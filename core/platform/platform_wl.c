@@ -32,6 +32,8 @@ uint8_t* waylandPixel;
 uint16_t width = 200;
 uint16_t height = 100;
 
+uint8_t c;
+
 // allocate shared memory
 int32_t wlAllocSharedMemory(uint64_t size) {
     int8_t name[8];
@@ -61,7 +63,7 @@ void wlResize() {
 }
 
 void draw() {
-    memset(waylandPixel, 255, width*height*4);
+    memset(waylandPixel, c, width*height*4);
 
     wl_surface_attach(waylandSurface, waylandBuffer, 0,0);
     wl_surface_damage_buffer(waylandSurface, 0,0, width,height);
@@ -75,6 +77,7 @@ void newFrame(void* data, struct wl_callback* waylandCallback, uint32_t callback
     waylandCallback = wl_surface_frame(waylandSurface);
     wl_callback_add_listener(waylandCallback, &waylandCallbackListener, 0);
 
+    ++c;
     draw();
 }
 
