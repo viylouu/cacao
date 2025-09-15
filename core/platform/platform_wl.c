@@ -99,8 +99,15 @@ struct xdg_surface_listener xdgSurfaceListener = {
     .configure = xdgSurfaceConf
 };
 
-void xdgTopLevelConf(void* data, struct xdg_toplevel* xdgTopLevel, int32_t width, int32_t height, struct wl_array* wlstates) {
-    
+void xdgTopLevelConf(void* data, struct xdg_toplevel* xdgTopLevel, int32_t newWidth, int32_t newHeight, struct wl_array* wlstates) {
+    if (!newWidth && !newHeight) return;
+
+    if (newWidth != width || newHeight != height) {
+        munmap(waylandPixel, width*height*4);
+        width = newWidth;
+        height = newHeight;
+        wlResize();
+    }
 }
 
 void xdgTopLevelClose(void* data, struct xdg_toplevel* xdgTopLevel) {
