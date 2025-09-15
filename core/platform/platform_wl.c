@@ -169,7 +169,6 @@ void wlKeyboardKey(void* data, struct wl_keyboard* waylandKeyboard, uint32_t ser
     (void)waylandKeyboard;
     (void)serial;
     (void)time;
-    (void)key;
     (void)state;
 
     printf("%u\n", key); 
@@ -203,6 +202,11 @@ void wlSeatCap(void* data, struct wl_seat* waylandSeat, uint32_t cap) {
     (void)data;
     (void)waylandSeat;
     (void)cap;
+
+    if (cap & WL_SEAT_CAPABILITY_KEYBOARD && !waylandKeyboard) {
+        waylandKeyboard = wl_seat_get_keyboard(waylandSeat);
+        wl_keyboard_add_listener(waylandKeyboard, &waylandKeyboardListener, 0);
+    }
 }
 
 void wlSeatName(void* data, struct wl_seat* waylandSeat, const char* name) {
