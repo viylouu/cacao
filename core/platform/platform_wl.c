@@ -39,6 +39,8 @@ uint8_t cc_wl_tick;
 
 uint8_t cc_wl_shouldWindowClose;
 
+void (*cc_wl_drawFunction)(void) = 0;
+
 // allocate shared memory
 int32_t wl_allocSharedMemory(uint64_t size) {
     char name[8];
@@ -69,6 +71,8 @@ void wl_resize() {
 
 void draw() {
     memset(g_wl_pixel, cc_wl_tick, cc_wl_width * cc_wl_height * 4);
+
+    cc_wl_drawFunction();
 
     wl_surface_attach(g_wl_surface, g_wl_buffer, 0,0);
     wl_surface_damage_buffer(g_wl_surface, 0,0, cc_wl_width, cc_wl_height);
@@ -247,7 +251,7 @@ struct wl_registry_listener g_wayland_registry_listener = {
     .global_remove = wl_regGlobRemove
 };
 
-int8_t wl_platformInit(const char* title, int32_t targwidth, int32_t targheight) {
+int8_t cc_wl_platformInit(const char* title, int32_t targwidth, int32_t targheight) {
     cc_wl_width = targwidth;
     cc_wl_height = targheight;
 
@@ -271,15 +275,12 @@ int8_t wl_platformInit(const char* title, int32_t targwidth, int32_t targheight)
 
     wl_surface_commit(g_wl_surface);
 
-    while(wl_display_dispatch(g_wl_display)) {
-        if (cc_wl_shouldWindowClose)
-            break;
-    }
-
     return 0;
 }
 
-int8_t wl_platformDeinit() {
+int8_t cc_wl_getShouldWindowClose(void) { return !wl_display_dispatch(g_wl_display) || cc_wl_shouldWindowClose; }
+
+int8_t cc_wl_platformDeinit(void) {
     if (g_wl_keyboard)
         wl_keyboard_destroy(g_wl_keyboard);
 

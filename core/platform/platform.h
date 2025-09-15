@@ -4,26 +4,20 @@
 #include <stdint.h>
 #include <stdlib.h>
 
-int8_t wl_platformInit(const char* title, int32_t targwidth, int32_t targheight);
-int8_t wl_platformDeinit();
+extern void (*cc_wl_drawFunction)(void);
+extern uint16_t cc_wl_width;
+extern uint16_t cc_wl_height;
+extern uint8_t cc_wl_tick;
+extern uint8_t cc_wl_shouldWindowClose;
 
-#ifdef _WIN32
-    fuck
-#else
-#define platformInit(title, targwidth, targheight) do { \
-            if (getenv("WAYLAND_DISPLAY")) \
-                wl_platformInit(title, targwidth, targheight); \
-            else {} \
-                  \
-        } while(0)
+int8_t cc_wl_platformInit(const char* title, int32_t targwidth, int32_t targheight);
+int8_t cc_wl_getShouldWindowClose(void);
+int8_t cc_wl_platformDeinit();
 
-#define platformDeinit() do { \
-            if (getenv("WAYLAND_DISPLAY")) \
-                wl_platformDeinit(); \
-            else {} \
-                  \
-        } while(0)
-
-#endif
+void cc_platformInit(const char* title, int32_t targwidth, int32_t targheight);
+void cc_platformSetDrawFunc(void (*func)(void));
+int8_t cc_platformShouldWindowClose(void);
+void cc_platformCloseWindow(void);
+void cc_platformDeinit(void);
 
 #endif
