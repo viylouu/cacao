@@ -27,6 +27,9 @@ struct wl_buffer* waylandBuffer;
 struct wl_shm* waylandSharedMemory; //shared memory
 struct xdg_wm_base* xdgShell;
 struct xdg_toplevel* xdgTopLevel;
+struct wl_seat* waylandSeat;
+struct wl_keyboard* waylandKeyboard;
+
 uint8_t* waylandPixel;
 
 uint16_t width = 200;
@@ -38,7 +41,7 @@ uint8_t shouldWindowClose;
 
 // allocate shared memory
 int32_t wlAllocSharedMemory(uint64_t size) {
-    int8_t name[8];
+    char name[8];
     name[0] = '/';
     name[7] = 0;
     for(uint8_t i = 1; i < 6; ++i)
@@ -75,6 +78,9 @@ void draw() {
 struct wl_callback_listener waylandCallbackListener;
 
 void newFrame(void* data, struct wl_callback* waylandCallback, uint32_t callbackData) {
+    (void)data;
+    (void)callbackData;
+
     wl_callback_destroy(waylandCallback);
     waylandCallback = wl_surface_frame(waylandSurface);
     wl_callback_add_listener(waylandCallback, &waylandCallbackListener, 0);
@@ -88,6 +94,8 @@ struct wl_callback_listener waylandCallbackListener = {
 };
 
 void xdgSurfaceConf(void* data, struct xdg_surface* xdgSurface, uint32_t serial) {
+    (void)data;
+
     xdg_surface_ack_configure(xdgSurface, serial);
     if (!waylandPixel)
         wlResize();
@@ -100,6 +108,10 @@ struct xdg_surface_listener xdgSurfaceListener = {
 };
 
 void xdgTopLevelConf(void* data, struct xdg_toplevel* xdgTopLevel, int32_t newWidth, int32_t newHeight, struct wl_array* wlstates) {
+    (void)data;
+    (void)xdgTopLevel;
+    (void)wlstates;
+
     if (!newWidth && !newHeight) return;
 
     if (newWidth != width || newHeight != height) {
@@ -111,6 +123,9 @@ void xdgTopLevelConf(void* data, struct xdg_toplevel* xdgTopLevel, int32_t newWi
 }
 
 void xdgTopLevelClose(void* data, struct xdg_toplevel* xdgTopLevel) {
+    (void)data;
+    (void)xdgTopLevel;
+
     shouldWindowClose = 1;
 }
 
@@ -120,6 +135,8 @@ struct xdg_toplevel_listener xdgTopLevelListener = {
 };
 
 void xdgShellPing(void* data, struct xdg_wm_base* xdgShell, uint32_t serial) {
+    (void)data;
+
     xdg_wm_base_pong(xdgShell, serial);
 }
 
@@ -127,7 +144,83 @@ struct xdg_wm_base_listener xdgShellListener = {
     .ping = xdgShellPing
 };
 
+void wlKeyboardKeymap(void* data, struct wl_keyboard* waylandKeyboard, uint32_t format, int32_t filedesc, uint32_t size) {
+    (void)data;
+    (void)waylandKeyboard;
+    (void)format;
+    (void)filedesc;
+    (void)size;
+}
+void wlKeyboardEnter(void* data, struct wl_keyboard* waylandKeyboard, uint32_t serial, struct wl_surface* waylandSurface, struct wl_array* keys) {
+    (void)data;
+    (void)waylandKeyboard;
+    (void)serial;
+    (void)waylandSurface;
+    (void)keys;
+}
+void wlKeyboardLeave(void* data, struct wl_keyboard* waylandKeyboard, uint32_t serial, struct wl_surface* waylandSurface) {
+    (void)data;
+    (void)waylandKeyboard;
+    (void)serial;
+    (void)waylandSurface;
+}
+void wlKeyboardKey(void* data, struct wl_keyboard* waylandKeyboard, uint32_t serial, uint32_t time, uint32_t key, uint32_t state) {
+    (void)data;
+    (void)waylandKeyboard;
+    (void)serial;
+    (void)time;
+    (void)key;
+    (void)state;
+
+    printf("%u\n", key); 
+}
+void wlKeyboardModifiers(void* data, struct wl_keyboard* waylandKeyboard, uint32_t serial, uint32_t depressed, uint32_t latched, uint32_t locked, uint32_t group) {
+    (void)data;
+    (void)waylandKeyboard;
+    (void)serial;
+    (void)depressed;
+    (void)latched;
+    (void)locked;
+    (void)group;
+}
+void wlKeyboardRepeatInfo(void* data, struct wl_keyboard* waylandKeyboard, int32_t rate, int32_t delay) {
+    (void)data;
+    (void)waylandKeyboard;
+    (void)rate;
+    (void)delay;
+}
+
+struct wl_keyboard_listener waylandKeyboardListener = {
+    .keymap = wlKeyboardKeymap,
+    .enter = wlKeyboardEnter,
+    .leave = wlKeyboardLeave,
+    .key = wlKeyboardKey,
+    .modifiers = wlKeyboardModifiers,
+    .repeat_info = wlKeyboardRepeatInfo
+};
+
+void wlSeatCap(void* data, struct wl_seat* waylandSeat, uint32_t cap) {
+    (void)data;
+    (void)waylandSeat;
+    (void)cap;
+}
+
+void wlSeatName(void* data, struct wl_seat* waylandSeat, const char* name) {
+    (void)data;
+    (void)waylandSeat;
+    (void)name;
+}
+
+struct wl_seat_listener waylandSeatListener = {
+    .capabilities = wlSeatCap,
+    .name = wlSeatName
+};
+
 void wlRegGlob(void* data, struct wl_registry* reg, uint32_t name, const char* intf, uint32_t ver) {
+    (void)data;
+    (void)reg;
+    (void)ver;
+
     if (!strcmp(intf, wl_compositor_interface.name))
         waylandCompositor = wl_registry_bind(waylandRegistry, name, &wl_compositor_interface, 4);
     else if(!strcmp(intf, wl_shm_interface.name))
@@ -136,10 +229,16 @@ void wlRegGlob(void* data, struct wl_registry* reg, uint32_t name, const char* i
         xdgShell = wl_registry_bind(waylandRegistry, name, &xdg_wm_base_interface, 1);
         xdg_wm_base_add_listener(xdgShell, &xdgShellListener, 0);
     }
+    else if(!strcmp(intf, wl_seat_interface.name)) {
+        waylandSeat = wl_registry_bind(waylandRegistry, name, &wl_seat_interface, 1);
+        wl_seat_add_listener(waylandSeat, &waylandSeatListener, 0);
+    }
 }
 
 void wlRegGlobRemove(void* data, struct wl_registry* reg, uint32_t name) {
-    
+    (void)data;
+    (void)reg;
+    (void)name;
 }
 
 struct wl_registry_listener waylandRegistryListener = {
@@ -180,6 +279,11 @@ int8_t wlPlatformInit(const char* title, int32_t targwidth, int32_t targheight) 
 }
 
 int8_t wlPlatformDeinit() {
+    if (waylandKeyboard)
+        wl_keyboard_destroy(waylandKeyboard);
+
+    wl_seat_destroy(waylandSeat);
+
     if (waylandBuffer)
         wl_buffer_destroy(waylandBuffer);
 
