@@ -1,17 +1,18 @@
 #include "platform.h"
 
-#include <stdint.h>
+#include <core/macros/macros.h>
 #include <stdlib.h>
 
-int8_t g_is_wayland;
+s8 g_is_wayland;
 
-void cc_platformInit(const char* title, int32_t targwidth, int32_t targheight) {
+void cc_platformInit(const char* title, s32 targwidth, s32 targheight) {
 #ifdef _WIN32
 #else
     g_is_wayland = getenv("WAYLAND_DISPLAY") != 0;
     if (g_is_wayland)
         cc_wl_platformInit(title, targwidth, targheight);
-    else {}
+    else 
+        cc_x_platformInit(title, targwidth, targheight);
 #endif
 }
 
@@ -29,16 +30,18 @@ void cc_platformDeinit(void) {
 #else
     if (g_is_wayland)
         cc_wl_platformDeinit();
-    else {}
+    else 
+        cc_x_platformDeinit();
 #endif
 }
 
-int8_t cc_platformShouldWindowClose(void) {
+s8 cc_platformShouldWindowClose(void) {
 #ifdef _WIN32
 #else
     if (g_is_wayland)
-        return cc_wl_getShouldWindowClose();
-    else {}
+        return cc_wl_platformGetShouldWindowClose();
+    else
+        return cc_x_platformGetShouldWindowClose();
 #endif
     return -1;
 }
@@ -48,6 +51,7 @@ void cc_platformCloseWindow(void) {
 #else
     if (g_is_wayland)
         cc_wl_shouldWindowClose = 1;
-    else {}
+    else 
+        cc_x_shouldWindowClose = 1;
 #endif
 }
