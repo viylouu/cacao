@@ -38,25 +38,26 @@ s32 cc_engineMain(
     void (*render)(void),
     void (*clean)(void)
 ) {
-    cc_platformInit(title, width,height);
-
-    cc_platformSetDrawFunc(render);
+    void* state = cc_platformInit(title, width,height);
 
     init();
 
     f64 starttime = getTime();
 
-    while(!cc_platformShouldWindowClose()) {
+    while(!cc_platformShouldClose(state)) {
         f64 ltime = cc_time;
         cc_time = getTime() - starttime;
         cc_delta = cc_time - ltime;
 
         update();
+        render();
+
+        cc_platformSwapBuffer(state);
     }
 
     clean();
 
-    cc_platformDeinit();
+    cc_platformDeinit(state);
 
     return 0;
 }

@@ -1,297 +1,242 @@
-#define _POSIX_C_SOURCE 200809L // bro wtf
-
-// huge thanks to will thomas for his tutorial https://www.youtube.com/watch?v=iIVIu7YRdY0&t=3346s
+#define _POSIX_C_SOURCE 200112L
 
 #include "platform.h"
 
-#include <wayland-client.h>
-#include <xdg-shell/xdg-shell-client-protocol.h>
-#include <stdlib.h>
+#include <errno.h>
 #include <stdio.h>
 #include <string.h>
-
+#include <stdlib.h>
+#include <sys/mman.h>
+#include <time.h>
 #include <unistd.h>
 #include <fcntl.h>
-#include <sys/mman.h>
-#include <sys/stat.h>
+#include <wayland-client.h>
+#include <xdg-shell/xdg-shell-client-protocol.h>
 
-struct wl_display* g_wl_display;
-struct wl_registry* g_wl_registry;
-struct xdg_surface* g_xdg_surface;
-struct wl_callback* g_wl_callback;
+typedef struct {
+    CCclientState cc; // must be at start
 
-struct wl_compositor* g_wl_compositor;
-struct wl_surface* g_wl_surface;
-struct wl_buffer* g_wl_buffer;
-struct wl_shm* g_wl_shared_memory;
-struct xdg_wm_base* g_xdg_shell;
-struct xdg_toplevel* g_xdg_top_level;
-struct wl_seat* g_wl_seat;
-struct wl_keyboard* g_wl_keyboard;
-
-u8* g_wl_pixel;
-
-uint16_t cc_wl_width = 200;
-uint16_t cc_wl_height = 100;
-
-u8 cc_wl_tick;
-
-u8 cc_wl_shouldWindowClose;
-
-void (*cc_wl_drawFunction)(void) = 0;
-
-// allocate shared memory
-s32 wl_allocSharedMemory(uint64_t size) {
-    char name[8];
-    name[0] = '/';
-    name[7] = 0;
-    for(u8 i = 1; i < 6; ++i)
-        name[i] = (rand() & 23) + 97;
+    struct wl_display* display;
+    struct wl_registry* registry;
+    struct wl_compositor* compositor;
+    struct wl_shm* shared_mem;
+    struct wl_surface* surface;
     
-    s32 filedesc = shm_open(name, O_RDWR | O_CREAT | O_EXCL, S_IWUSR | S_IRUSR | S_IWOTH | S_IROTH);
-    shm_unlink(name);
-    ftruncate(filedesc, size);
+    struct xdg_wm_base* xdg_shell;
+    struct xdg_surface* xdg_surface;
+    struct xdg_toplevel* xdg_toplevel;
+} WLclientState;
 
-    return filedesc;
-}
 
-void wl_resize() {
-    s32 filedesc = wl_allocSharedMemory(cc_wl_width * cc_wl_height * 4); // width * height, * 4 because each pix is 4 bytes (rgba)
-    
-    g_wl_pixel = mmap(0, cc_wl_width * cc_wl_height * 4, PROT_READ | PROT_WRITE, MAP_SHARED, filedesc, 0);
+//
+// SHARED MEM
+//
 
-    struct wl_shm_pool* pool = wl_shm_create_pool(g_wl_shared_memory, filedesc, cc_wl_width * cc_wl_height * 4);
 
-    g_wl_buffer = wl_shm_pool_create_buffer(pool, 0, cc_wl_width, cc_wl_height, cc_wl_width * 4, WL_SHM_FORMAT_ARGB8888);
-    
-    wl_shm_pool_destroy(pool);
-    close(filedesc);
-}
-
-void draw() {
-    memset(g_wl_pixel, cc_wl_tick, cc_wl_width * cc_wl_height * 4);
-
-    cc_wl_drawFunction();
-
-    wl_surface_attach(g_wl_surface, g_wl_buffer, 0,0);
-    wl_surface_damage_buffer(g_wl_surface, 0,0, cc_wl_width, cc_wl_height);
-    wl_surface_commit(g_wl_surface);
-}
-
-struct wl_callback_listener g_wl_callback_listener;
-
-void newFrame(void* data, struct wl_callback* wl_callback, u32 callbackdata) {
-    (void)data;
-    (void)callbackdata;
-
-    wl_callback_destroy(wl_callback);
-    wl_callback = wl_surface_frame(g_wl_surface);
-    wl_callback_add_listener(wl_callback, &g_wl_callback_listener, 0);
-
-    ++cc_wl_tick;
-    draw();
-}
-
-struct wl_callback_listener g_wl_callback_listener = {
-    .done = newFrame
-};
-
-void xdg_surfaceConf(void* data, struct xdg_surface* xdg_surface, u32 serial) {
-    (void)data;
-
-    xdg_surface_ack_configure(xdg_surface, serial);
-    if (!g_wl_pixel)
-        wl_resize();
-
-    draw();
-}
-
-struct xdg_surface_listener g_xdg_surface_listener = {
-    .configure = xdg_surfaceConf
-};
-
-void xdg_topLevelConf(void* data, struct xdg_toplevel* xdg_top_level, s32 newwidth, s32 newheight, struct wl_array* wl_states) {
-    (void)data;
-    (void)xdg_top_level;
-    (void)wl_states;
-
-    if (!newwidth && !newheight) return;
-
-    if (newwidth != cc_wl_width || newheight != cc_wl_height) {
-        munmap(g_wl_pixel, cc_wl_width * cc_wl_height * 4);
-        cc_wl_width = newwidth;
-        cc_wl_height = newheight;
-        wl_resize();
+static void wl_randName(char* buf) {
+    struct timespec ts;
+    clock_gettime(CLOCK_REALTIME, &ts);
+    s64 r = ts.tv_nsec;
+    for (s32 i = 0; i < 6; ++i) {
+        buf[i] = 'A'+(r&15)+(r&16)&2;
+        r >>= 5;
     }
 }
 
-void xdg_topLevelClose(void* data, struct xdg_toplevel* xdg_top_level) {
-    (void)data;
-    (void)xdg_top_level;
-
-    cc_wl_shouldWindowClose = 1;
+static s32 wl_createSharedMemFile(void) {
+    s32 retries = 100;
+    do {
+        char name[] = "/wl_shm-XXXXXX";
+        wl_randName(name + sizeof(name) - 7);
+        --retries;
+        s32 filedesc = shm_open(name, O_RDWR | O_CREAT | O_EXCL, 0600);
+        if (filedesc >= 0) {
+            shm_unlink(name);
+            return filedesc;
+        }
+    } while(retries > 0 && errno == EEXIST);
+    return -1;
 }
 
-struct xdg_toplevel_listener g_xdg_top_level_listener = {
-    .configure = xdg_topLevelConf,
-    .close = xdg_topLevelClose
+s32 wl_allocSharedMemFile(size_t size) {
+    s32 filedesc = wl_createSharedMemFile();
+    if (filedesc < 0)
+        return -1;
+    s32 ret;
+    do {
+        ret = ftruncate(filedesc, size);
+    } while(ret < 0 && errno == EINTR);
+    if (ret < 0) {
+        close(filedesc);
+        return -1;
+    }
+    return filedesc;
+}
+
+
+//
+// BUFFER
+//
+
+
+static void wl_bufferRelease(void* client, struct wl_buffer* buffer) {
+    (void)client;
+
+    wl_buffer_destroy(buffer);
+}
+
+static const struct wl_buffer_listener g_wl_buffer_listener = {
+    .release = wl_bufferRelease
 };
 
-void xdg_shellPing(void* data, struct xdg_wm_base* xdg_shell, u32 serial) {
-    (void)data;
+
+//
+// RENDERING
+//
+
+
+static struct wl_buffer* wl_drawFrame(void* client) {
+    WLclientState* state = client;
+
+    s32 filedesc = wl_allocSharedMemFile(state->cc.size);
+    if (filedesc == -1)
+        return NULL;
+
+    u32* data = mmap(NULL, state->cc.size, PROT_READ | PROT_WRITE, MAP_SHARED, filedesc, 0);
+    if (data == MAP_FAILED) {
+        close(filedesc);
+        return NULL;
+    }
+
+    struct wl_shm_pool* pool = wl_shm_create_pool(state->shared_mem, filedesc, state->cc.size);
+    struct wl_buffer* buffer = wl_shm_pool_create_buffer(pool, 0, state->cc.width, state->cc.height, state->cc.stride, WL_SHM_FORMAT_XRGB8888);
+    wl_shm_pool_destroy(pool);
+    close(filedesc);
+
+    for (s32 y = 0; y < state->cc.height; ++y) 
+        for (s32 x = 0; x < state->cc.width; ++x) {
+            if ((x + y / 8 * 8) % 16 < 8)
+                data[y * state->cc.width + x] = 0xFF666666;
+            else
+                data[y * state->cc.width + x] = 0xFFEEEEEE;
+        }
+
+    munmap(data, state->cc.size);
+    wl_buffer_add_listener(buffer, &g_wl_buffer_listener, NULL);
+    return buffer;
+}
+
+
+//
+// XDG SURFACE
+//
+
+
+static void xdg_surfaceConfigure(void* client, struct xdg_surface* xdg_surface, u32 serial) {
+    WLclientState* state = client;
+
+    xdg_surface_ack_configure(xdg_surface, serial);
+
+    struct wl_buffer* buffer = wl_drawFrame(state);
+    wl_surface_attach(state->surface, buffer, 0,0);
+    wl_surface_commit(state->surface);
+}
+
+static const struct xdg_surface_listener g_xdg_surface_listener = {
+    .configure = xdg_surfaceConfigure
+};
+
+
+//
+// XDG SHELL
+//
+
+
+static void xdg_wmBasePing(void* client, struct xdg_wm_base* xdg_shell, u32 serial) {
+    (void)client;
 
     xdg_wm_base_pong(xdg_shell, serial);
 }
 
-struct xdg_wm_base_listener g_xdg_shell_listener = {
-    .ping = xdg_shellPing
+static const struct xdg_wm_base_listener g_xdg_shell_listener = {
+    .ping = xdg_wmBasePing
 };
 
-void wl_keyboardKeymap(void* data, struct wl_keyboard* wl_keyboard, u32 format, s32 filedesc, u32 size) {
-    (void)data;
-    (void)wl_keyboard;
-    (void)format;
-    (void)filedesc;
-    (void)size;
-}
-void wl_keyboardEnter(void* data, struct wl_keyboard* wl_keyboard, u32 serial, struct wl_surface* waylandSurface, struct wl_array* keys) {
-    (void)data;
-    (void)wl_keyboard;
-    (void)serial;
-    (void)waylandSurface;
-    (void)keys;
-}
-void wl_keyboardLeave(void* data, struct wl_keyboard* wl_keyboard, u32 serial, struct wl_surface* wl_surface) {
-    (void)data;
-    (void)wl_keyboard;
-    (void)serial;
-    (void)wl_surface;
-}
-void wl_keyboardKey(void* data, struct wl_keyboard* wl_keyboard, u32 serial, u32 time, u32 key, u32 state) {
-    (void)data;
-    (void)wl_keyboard;
-    (void)serial;
-    (void)time;
-    (void)state;
+//
+// REGISTRY
+//
 
-    printf("%u\n", key); 
-}
-void wl_keyboardModifiers(void* data, struct wl_keyboard* wl_keyboard, u32 serial, u32 depressed, u32 latched, u32 locked, u32 group) {
-    (void)data;
-    (void)wl_keyboard;
-    (void)serial;
-    (void)depressed;
-    (void)latched;
-    (void)locked;
-    (void)group;
-}
-void wl_keyboardRepeatInfo(void* data, struct wl_keyboard* wl_keyboard, s32 rate, s32 delay) {
-    (void)data;
-    (void)wl_keyboard;
-    (void)rate;
-    (void)delay;
-}
 
-struct wl_keyboard_listener g_wl_keyboard_listener = {
-    .keymap = wl_keyboardKeymap,
-    .enter = wl_keyboardEnter,
-    .leave = wl_keyboardLeave,
-    .key = wl_keyboardKey,
-    .modifiers = wl_keyboardModifiers,
-    .repeat_info = wl_keyboardRepeatInfo
-};
-
-void wl_seatCap(void* data, struct wl_seat* wl_seat, u32 cap) {
-    (void)data;
-
-    if (cap & WL_SEAT_CAPABILITY_KEYBOARD && !g_wl_keyboard) {
-        g_wl_keyboard = wl_seat_get_keyboard(wl_seat);
-        wl_keyboard_add_listener(g_wl_keyboard, &g_wl_keyboard_listener, 0);
-    }
-}
-
-void wl_seatName(void* data, struct wl_seat* waylandSeat, const char* name) {
-    (void)data;
-    (void)waylandSeat;
-    (void)name;
-}
-
-struct wl_seat_listener g_wl_seat_listener = {
-    .capabilities = wl_seatCap,
-    .name = wl_seatName
-};
-
-void wl_regGlob(void* data, struct wl_registry* registry, u32 name, const char* intf, u32 version) {
-    (void)data;
+static void wl_registryHandleGlobal(void* client, struct wl_registry* registry, u32 name, const char* interface, u32 version) {
     (void)version;
 
-    if (!strcmp(intf, wl_compositor_interface.name))
-        g_wl_compositor = wl_registry_bind(registry, name, &wl_compositor_interface, 4);
-    else if(!strcmp(intf, wl_shm_interface.name))
-        g_wl_shared_memory = wl_registry_bind(registry, name, &wl_shm_interface, 1);
-    else if(!strcmp(intf, xdg_wm_base_interface.name)) {
-        g_xdg_shell = wl_registry_bind(registry, name, &xdg_wm_base_interface, 1);
-        xdg_wm_base_add_listener(g_xdg_shell, &g_xdg_shell_listener, 0);
-    }
-    else if(!strcmp(intf, wl_seat_interface.name)) {
-        g_wl_seat = wl_registry_bind(registry, name, &wl_seat_interface, 1);
-        wl_seat_add_listener(g_wl_seat, &g_wl_seat_listener, 0);
+    WLclientState* state = client;
+
+    if (!strcmp(interface, wl_compositor_interface.name))
+        state->compositor = wl_registry_bind(registry, name, &wl_compositor_interface, 4);
+    if (!strcmp(interface, wl_shm_interface.name))
+        state->shared_mem = wl_registry_bind(registry, name, &wl_shm_interface, 1);
+    if (!strcmp(interface, xdg_wm_base_interface.name)) {
+        state->xdg_shell = wl_registry_bind(registry, name, &xdg_wm_base_interface, 1);
+        xdg_wm_base_add_listener(state->xdg_shell, &g_xdg_shell_listener, state);
     }
 }
 
-void wl_regGlobRemove(void* data, struct wl_registry* registry, u32 name) {
-    (void)data;
+static void wl_registryHandleGlobalRemove(void* client, struct wl_registry* registry, u32 name) {
+    (void)client;
     (void)registry;
     (void)name;
 }
 
-struct wl_registry_listener g_wayland_registry_listener = {
-    .global = wl_regGlob,
-    .global_remove = wl_regGlobRemove
+static const struct wl_registry_listener g_wl_registry_listener = {
+    .global = wl_registryHandleGlobal,
+    .global_remove = wl_registryHandleGlobalRemove
 };
 
-s8 cc_wl_platformInit(const char* title, s32 targwidth, s32 targheight) {
-    cc_wl_width = targwidth;
-    cc_wl_height = targheight;
 
-    g_wl_display = wl_display_connect(0);
-    g_wl_registry = wl_display_get_registry(g_wl_display);
+//
+// MAIN
+//
 
-    wl_registry_add_listener(g_wl_registry, &g_wayland_registry_listener, 0);
-    wl_display_roundtrip(g_wl_display);
 
-    g_wl_surface = wl_compositor_create_surface(g_wl_compositor);
-    g_wl_callback = wl_surface_frame(g_wl_surface);
-    wl_callback_add_listener(g_wl_callback, &g_wl_callback_listener, 0);
+void* cc_wl_platformInit(const char* title, s32 targwidth, s32 targheight) {
+    WLclientState* state = malloc(sizeof(WLclientState));
 
-    g_xdg_surface = xdg_wm_base_get_xdg_surface(g_xdg_shell, g_wl_surface);
-    xdg_surface_add_listener(g_xdg_surface, &g_xdg_surface_listener, 0);
+    state->display = wl_display_connect(NULL);
+    state->registry = wl_display_get_registry(state->display);
+    wl_registry_add_listener(state->registry, &g_wl_registry_listener, state);
+    wl_display_roundtrip(state->display);
 
-    g_xdg_top_level = xdg_surface_get_toplevel(g_xdg_surface);
-    xdg_toplevel_add_listener(g_xdg_top_level, &g_xdg_top_level_listener, 0);
+    state->surface = wl_compositor_create_surface(state->compositor);
+    state->xdg_surface = xdg_wm_base_get_xdg_surface(state->xdg_shell, state->surface);
+    xdg_surface_add_listener(state->xdg_surface, &g_xdg_surface_listener, state);
 
-    xdg_toplevel_set_title(g_xdg_top_level, title);
+    state->xdg_toplevel = xdg_surface_get_toplevel(state->xdg_surface);
+    xdg_toplevel_set_title(state->xdg_toplevel, title);
 
-    wl_surface_commit(g_wl_surface);
+    state->cc.width = targwidth;
+    state->cc.height = targheight;
+    state->cc.stride = state->cc.width * 4; 
+    state->cc.pool_size = state->cc.stride * state->cc.height * 2;
+    state->cc.size = state->cc.pool_size / 2;
+
+    wl_surface_commit(state->surface);
+
+    state->cc.running = 1;
+
+    return state;
+}
+
+s8 cc_wl_platformIsRunning(void* client) {
+    WLclientState* state = client;
+    return wl_display_dispatch(state->display) != -1 && state->cc.running;
+}
+
+s8 cc_wl_platformDeinit(void* client) {
+    WLclientState* state = (WLclientState*)client;
+
+    wl_display_disconnect(state->display);
 
     return 0;
 }
 
-s8 cc_wl_platformGetShouldWindowClose(void) { return !wl_display_dispatch(g_wl_display) || cc_wl_shouldWindowClose; }
-
-s8 cc_wl_platformDeinit(void) {
-    if (g_wl_keyboard)
-        wl_keyboard_destroy(g_wl_keyboard);
-
-    wl_seat_destroy(g_wl_seat);
-
-    if (g_wl_buffer)
-        wl_buffer_destroy(g_wl_buffer);
-
-    xdg_toplevel_destroy(g_xdg_top_level);
-    xdg_surface_destroy(g_xdg_surface);
-
-    wl_surface_destroy(g_wl_surface);
-    wl_display_disconnect(g_wl_display);
-    return 0;
-}

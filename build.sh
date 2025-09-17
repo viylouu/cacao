@@ -32,7 +32,7 @@ fi
 if $BUILD_WINDOWS; then
     CFLAGS+=" -target x86_64-windows-gnu -lopengl32"
 else
-    CFLAGS+=" -lGL -lwayland-client -lxcb"
+    CFLAGS+=" -lwayland-egl -lwayland-client -lEGL -lGL -lxcb -lrt"
 fi
 
 if [ -n "$EXAMPLE" ]; then
