@@ -4,7 +4,7 @@
 void init(void) {}
 
 void update(void) {
-    printf("%d ", (s32)(1.f/cc_delta));
+    //printf("%d ", (s32)(1.f/cc_delta));
 }
 
 void render(void) {}
