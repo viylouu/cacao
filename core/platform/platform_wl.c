@@ -25,6 +25,9 @@ typedef struct {
     struct xdg_wm_base* xdg_shell;
     struct xdg_surface* xdg_surface;
     struct xdg_toplevel* xdg_toplevel;
+
+    f32 offset;
+    u32 last_frame;
 } WLclientState;
 
 
@@ -113,9 +116,10 @@ static struct wl_buffer* wl_drawFrame(void* client) {
     wl_shm_pool_destroy(pool);
     close(filedesc);
 
+    s32 offset = (s32)state->offset % 8;
     for (s32 y = 0; y < state->cc.height; ++y) 
         for (s32 x = 0; x < state->cc.width; ++x) {
-            if ((x + y / 8 * 8) % 16 < 8)
+            if (((x + offset) + (y + offset) / 8 * 8) % 16 < 8)
                 data[y * state->cc.width + x] = 0xFF666666;
             else
                 data[y * state->cc.width + x] = 0xFFEEEEEE;
@@ -161,6 +165,40 @@ static void xdg_wmBasePing(void* client, struct xdg_wm_base* xdg_shell, u32 seri
 static const struct xdg_wm_base_listener g_xdg_shell_listener = {
     .ping = xdg_wmBasePing
 };
+
+
+//
+// SURFACE FRAME
+//
+
+
+static const struct wl_callback_listener g_wl_surface_frame_listener;
+
+static void wl_surfaceFrameDone(void* client, struct wl_callback* callback, u32 time) {
+    wl_callback_destroy(callback);
+
+    WLclientState* state = client;
+
+    callback = wl_surface_frame(state->surface);
+    wl_callback_add_listener(callback, &g_wl_surface_frame_listener, state);
+
+    if (state->last_frame != 0) {
+        s32 elapsed = time - state->last_frame;
+        state->offset += elapsed / 1000.f * 24;
+    }
+
+    struct wl_buffer* buffer = wl_drawFrame(state);
+    wl_surface_attach(state->surface, buffer, 0,0);
+    wl_surface_damage_buffer(state->surface, 0,0, INT32_MAX, INT32_MAX);
+    wl_surface_commit(state->surface);
+
+    state->last_frame = time;
+}
+
+static const struct wl_callback_listener g_wl_surface_frame_listener = {
+    .done = wl_surfaceFrameDone
+};
+
 
 //
 // REGISTRY
@@ -219,10 +257,13 @@ void* cc_wl_platformInit(const char* title, s32 targwidth, s32 targheight) {
     state->cc.stride = state->cc.width * 4; 
     state->cc.pool_size = state->cc.stride * state->cc.height * 2;
     state->cc.size = state->cc.pool_size / 2;
+    state->cc.running = 1;
 
     wl_surface_commit(state->surface);
 
-    state->cc.running = 1;
+    struct wl_callback* callback = wl_surface_frame(state->surface);
+    wl_callback_add_listener(callback, &g_wl_surface_frame_listener, state);
+
 
     return state;
 }
