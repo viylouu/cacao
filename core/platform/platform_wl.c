@@ -13,6 +13,33 @@
 #include <wayland-client.h>
 #include <xdg-shell/xdg-shell-client-protocol.h>
 
+typedef enum {
+    POINTER_EVENT_ENTER         = 1 << 0,
+    POINTER_EVENT_LEAVE         = 1 << 1,
+    POINTER_EVENT_MOTION        = 1 << 2,
+    POINTER_EVENT_BUTTON        = 1 << 3,
+    POINTER_EVENT_AXIS          = 1 << 4,
+    POINTER_EVENT_AXIS_SOURCE   = 1 << 5,
+    POINTER_EVENT_AXIS_STOP     = 1 << 6,
+    POINTER_EVENT_AXIS_DISCRETE = 1 << 7
+} WLpointerEventMask;
+
+typedef struct {
+    u32 event_mask;
+    wl_fixed_t surface_x;
+    wl_fixed_t surface_y;
+    u32 button;
+    u32 state;
+    u32 time;
+    u32 serial;
+    struct {
+        u8 valid;
+        wl_fixed_t value;
+        s32 discrete;
+    } axes[2];
+    u32 axis_source;
+} WLpointerEvent;
+
 typedef struct {
     CCclientState cc; // must be at start
 
@@ -21,6 +48,9 @@ typedef struct {
     struct wl_compositor* compositor;
     struct wl_shm* shared_mem;
     struct wl_surface* surface;
+    struct wl_seat* seat;
+    struct wl_keyboard* keyboard;
+    struct wl_pointer* pointer;
     
     struct xdg_wm_base* xdg_shell;
     struct xdg_surface* xdg_surface;
@@ -28,6 +58,8 @@ typedef struct {
 
     f32 offset;
     u32 last_frame;
+
+    WLpointerEvent pointer_event;
 } WLclientState;
 
 
@@ -201,6 +233,205 @@ static const struct wl_callback_listener g_wl_surface_frame_listener = {
 
 
 //
+// POINTER
+//
+
+
+// wouldnt it just be reaaaally fucking funny if this were actually server code because of how much shit there is?
+
+static void wl_pointerEnter(void* client, struct wl_pointer* pointer, u32 serial, struct wl_surface* surface, wl_fixed_t surfacex, wl_fixed_t surfacey) {
+    (void)pointer;
+    (void)surface;
+    
+    WLclientState* state = client;
+
+    state->pointer_event.event_mask |= POINTER_EVENT_ENTER;
+    state->pointer_event.serial = serial;
+    state->pointer_event.surface_x = surfacex;
+    state->pointer_event.surface_y = surfacey;
+}
+
+static void wl_pointerLeave(void* client, struct wl_pointer* pointer, u32 serial, struct wl_surface* surface) {
+    (void)pointer;
+    (void)surface;
+
+    WLclientState* state = client;
+
+    state->pointer_event.serial = serial;
+    state->pointer_event.event_mask |= POINTER_EVENT_LEAVE;
+}
+
+static void wl_pointerMotion(void* client, struct wl_pointer* pointer, u32 time, wl_fixed_t surfacex, wl_fixed_t surfacey) {
+    (void)pointer;
+
+    WLclientState* state = client;
+
+    state->pointer_event.event_mask |= POINTER_EVENT_MOTION;
+    state->pointer_event.time = time;
+    state->pointer_event.surface_x = surfacex;
+    state->pointer_event.surface_y = surfacey;
+}
+
+static void wl_pointerButton(void* client, struct wl_pointer* pointer, u32 serial, u32 time, u32 button, u32 stateAAAAA) {
+    (void)pointer;
+
+    WLclientState* state = client;
+
+    state->pointer_event.event_mask |= POINTER_EVENT_BUTTON;
+    state->pointer_event.time = time;
+    state->pointer_event.serial = serial;
+    state->pointer_event.button = button;
+    state->pointer_event.state = stateAAAAA; // uniqueness silly willy
+                                             // can you tell i'm tired
+}
+
+static void wl_pointerAxis(void* client, struct wl_pointer* pointer, u32 time, u32 axis, wl_fixed_t value) {
+    (void)pointer;
+
+    WLclientState* state = client;
+
+    state->pointer_event.event_mask |= POINTER_EVENT_AXIS;
+    state->pointer_event.time = time;
+    state->pointer_event.axes[axis].valid = 1;
+    state->pointer_event.axes[axis].value = value;
+}
+
+static void wl_pointerAxisSource(void* client, struct wl_pointer* pointer, u32 axissource) {
+    (void)pointer;
+
+    WLclientState* state = client;
+
+    state->pointer_event.event_mask |= POINTER_EVENT_AXIS_SOURCE;
+    state->pointer_event.axis_source = axissource;
+}
+
+static void wl_pointerAxisStop(void* client, struct wl_pointer* pointer, u32 time, u32 axis) {
+    (void)pointer;
+
+    WLclientState* state = client;
+
+    state->pointer_event.time = time;
+    state->pointer_event.event_mask |= POINTER_EVENT_AXIS_STOP;
+    state->pointer_event.axes[axis].valid = 1;
+}
+
+static void wl_pointerAxisDiscrete(void* client, struct wl_pointer* pointer, u32 axis, s32 discrete) {
+    (void)pointer;
+
+    WLclientState* state = client;
+
+    state->pointer_event.event_mask |= POINTER_EVENT_AXIS_DISCRETE;
+    state->pointer_event.axes[axis].valid = 1;
+    state->pointer_event.axes[axis].discrete = discrete;
+}
+
+static void wl_pointerFrame(void* client, struct wl_pointer* pointer) {
+    WLclientState* state = client;
+    WLpointerEvent* event = &state->pointer_event;
+    printf("pointer frame @ %d: ", event->time);
+
+    if (event->event_mask & POINTER_EVENT_ENTER) {
+        printf("entered %f, %f",
+                wl_fixed_to_double(event->surface_x),
+                wl_fixed_to_double(event->surface_y)
+            );
+    }
+
+    if (event->event_mask & POINTER_EVENT_LEAVE) {
+        printf("leave");
+    }
+
+    if (event->event_mask & POINTER_EVENT_MOTION) {
+        printf("motion %f, %f ",
+                wl_fixed_to_double(event->surface_x),
+                wl_fixed_to_double(event->surface_y));
+    }
+
+    if (event->event_mask & POINTER_EVENT_BUTTON) {
+        char* stateSTOPFUCKINGNAMINGTHINGSSTATE = event->state == WL_POINTER_BUTTON_STATE_RELEASED ? "released" : "pressed";
+        printf("button %d %s ", event->button, stateSTOPFUCKINGNAMINGTHINGSSTATE);
+    }
+
+    u32 axis_events = POINTER_EVENT_AXIS
+        | POINTER_EVENT_AXIS_SOURCE
+        | POINTER_EVENT_AXIS_STOP
+        | POINTER_EVENT_AXIS_DISCRETE;
+    char* axis_name[2] = {
+        [WL_POINTER_AXIS_VERTICAL_SCROLL] = "vertical",
+        [WL_POINTER_AXIS_HORIZONTAL_SCROLL] = "horizontal"
+    };
+    char* axis_source[4] = {
+        [WL_POINTER_AXIS_SOURCE_WHEEL] = "wheel",
+        [WL_POINTER_AXIS_SOURCE_FINGER] = "finger",
+        [WL_POINTER_AXIS_SOURCE_CONTINUOUS] = "continuous",
+        [WL_POINTER_AXIS_SOURCE_WHEEL_TILT] = "wheel tilt"
+    };
+
+    if (event->event_mask & axis_events)
+        for (size_t i = 0; i < 2; ++i) {
+            if (!event->axes[i].valid)
+                continue;
+            printf("%s axis ", axis_name[i]);
+            if (event->event_mask & POINTER_EVENT_AXIS)
+                printf("value %f ", wl_fixed_to_double(event->axes[i].value));
+            if (event->event_mask & POINTER_EVENT_AXIS_DISCRETE)
+                printf("discrete %d ", event->axes[i].discrete);
+            if (event->event_mask & POINTER_EVENT_AXIS_SOURCE)
+                printf("via %s ", axis_source[event->axis_source]);
+            if (event->event_mask & POINTER_EVENT_AXIS_STOP)
+                printf("(stopped) ");
+        }
+
+    printf("\n");
+    memset(event, 0, sizeof(*event));
+}
+
+static const struct wl_pointer_listener g_wl_pointer_listener = {
+    .enter = wl_pointerEnter,
+    .leave = wl_pointerLeave,
+    .motion = wl_pointerMotion,
+    .button = wl_pointerButton,
+    .axis = wl_pointerAxis,
+    .frame = wl_pointerFrame,
+    .axis_source = wl_pointerAxisSource,
+    .axis_stop = wl_pointerAxisStop,
+    .axis_discrete = wl_pointerAxisDiscrete
+};
+
+
+//
+// SEAT
+//
+
+
+static void wl_seatCapabilities(void* client, struct wl_seat* seat, u32 capabilities) {
+    WLclientState* state = client;
+
+    u32 hascursor = capabilities & WL_SEAT_CAPABILITY_POINTER;
+
+    if (hascursor && !state->pointer) {
+        state->pointer = wl_seat_get_pointer(state->seat);
+        wl_pointer_add_listener(state->pointer, &g_wl_pointer_listener, state);
+    } else if (!hascursor && state->pointer) {
+        wl_pointer_release(state->pointer);
+        state->pointer = 0;
+    }
+}
+
+static void wl_seatName(void* client, struct wl_seat* seat, const char* name) {
+    (void)client;
+    (void)seat;
+
+    printf("seat name: %s\n", name);
+}
+
+static const struct wl_seat_listener g_wl_seat_listener = {
+    .capabilities = wl_seatCapabilities,
+    .name = wl_seatName
+};
+
+
+//
 // REGISTRY
 //
 
@@ -212,11 +443,14 @@ static void wl_registryHandleGlobal(void* client, struct wl_registry* registry, 
 
     if (!strcmp(interface, wl_compositor_interface.name))
         state->compositor = wl_registry_bind(registry, name, &wl_compositor_interface, 4);
-    if (!strcmp(interface, wl_shm_interface.name))
+    else if (!strcmp(interface, wl_shm_interface.name))
         state->shared_mem = wl_registry_bind(registry, name, &wl_shm_interface, 1);
-    if (!strcmp(interface, xdg_wm_base_interface.name)) {
+    else if (!strcmp(interface, xdg_wm_base_interface.name)) {
         state->xdg_shell = wl_registry_bind(registry, name, &xdg_wm_base_interface, 1);
         xdg_wm_base_add_listener(state->xdg_shell, &g_xdg_shell_listener, state);
+    } else if (!strcmp(interface, wl_seat_interface.name)) {
+        state->seat = wl_registry_bind(registry, name, &wl_seat_interface, 7);
+        wl_seat_add_listener(state->seat, &g_wl_seat_listener, state);
     }
 }
 
