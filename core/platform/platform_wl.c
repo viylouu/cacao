@@ -12,6 +12,7 @@
 #include <fcntl.h>
 #include <wayland-client.h>
 #include <xdg-shell/xdg-shell-client-protocol.h>
+#include <xkbcommon/xkbcommon.h>
 
 typedef enum {
     POINTER_EVENT_ENTER         = 1 << 0,
@@ -60,6 +61,10 @@ typedef struct {
     u32 last_frame;
 
     WLpointerEvent pointer_event;
+
+    struct xkb_state* xkb_state;
+    struct xkb_context* xkb_context;
+    struct xkb_keymap* xkb_keymap;
 } WLclientState;
 
 
@@ -400,21 +405,152 @@ static const struct wl_pointer_listener g_wl_pointer_listener = {
 
 
 //
+// KEYBOARD
+//
+
+
+static void wl_keyboardKeymap(void* client, struct wl_keyboard* keyboard, u32 format, s32 filedesc, u32 size) {
+    WLclientState* state = client;
+
+    if (format != WL_KEYBOARD_KEYMAP_FORMAT_XKB_V1) {
+        printf("fix your fucking keymap bucko\n");
+        exit(1);
+    }
+
+    char* mapsharedmem = mmap(0, size, PROT_READ, MAP_SHARED, filedesc, 0);
+    if (mapsharedmem == MAP_FAILED) {
+        printf("failed to keeb map\n");
+        exit(1);
+    }
+
+    struct xkb_keymap* xkb_keymap = xkb_keymap_new_from_string(state->xkb_context, mapsharedmem, XKB_KEYMAP_FORMAT_TEXT_V1, XKB_KEYMAP_COMPILE_NO_FLAGS);
+    munmap(mapsharedmem, size);
+    close(filedesc);
+
+    struct xkb_state* xkb_state = xkb_state_new(xkb_keymap);
+    xkb_keymap_unref(state->xkb_keymap);
+    xkb_state_unref(state->xkb_state);
+    state->xkb_keymap = xkb_keymap;
+    state->xkb_state = xkb_state;
+}
+
+static void wl_keyboardEnter(void* client, struct wl_keyboard* keyboard, u32 serial, struct wl_surface* surface, struct wl_array* kys) {
+    // yes i know keys is spelt wrong
+    // am i going to change it?
+    //
+    // no
+    
+    (void)keyboard;
+    (void)serial;
+    (void)surface;
+
+    WLclientState* state = client;
+
+    printf("keeb enter; pressed keys:\n");
+    u32* key;
+    wl_array_for_each(key, kys) {
+        char buf[128];
+        xkb_keysym_t sym = xkb_state_key_get_one_sym(state->xkb_state, *key + 8);
+        xkb_keysym_get_name(sym, buf, sizeof(buf));
+        printf("sym: %-12s (%d), ", buf, sym);
+        xkb_state_key_get_utf8(state->xkb_state, *key + 8, buf, sizeof(buf));
+        printf("utf8: '%s'\n", buf);
+    }
+}
+
+static void wl_keyboardKey(void* client, struct wl_keyboard* keyboard, u32 cereal, u32 queTiempoHaceHoyHaceMalTiempo, u32 key, u32 stateAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) {
+    (void)keyboard;
+    (void)cereal;
+    (void)queTiempoHaceHoyHaceMalTiempo;
+
+    WLclientState* state = client;
+    
+    char buf[128];
+    u32 keycode = key + 8;
+    xkb_keysym_t sym = xkb_state_key_get_one_sym(state->xkb_state, keycode);
+    xkb_keysym_get_name(sym, buf, sizeof(buf));
+    const char* action = stateAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA == WL_KEYBOARD_KEY_STATE_PRESSED ? "press" : "release";
+    printf("key %s: sym: %-12s (%d), ", action, buf, sym);
+    xkb_state_key_get_utf8(state->xkb_state, keycode, buf, sizeof(buf));
+    printf("utf8: '%s'\n", buf);
+}
+
+static void wl_keyboardLeave(void* client, struct wl_keyboard* keyboard, u32 serial, struct wl_surface* surface) {
+    // smash
+    (void)client;
+    (void)keyboard;
+    (void)serial;
+    (void)surface;
+    
+    printf("keyboard leave\n");
+}
+
+static void wl_keyboardModifiers(void* client, struct wl_keyboard* keyboard, u32 serial, u32 depressed, u32 latched, u32 locked, u32 group/*, u32 fuck, u32 this, u32 shit, u32 im, u32 out*/) {
+    (void)keyboard;
+    (void)serial;
+
+    // apparently the compiler doesent like it when i do that
+    // (void)fuck;
+    // (void)this;
+    // (void)shit;
+    // (void)im;
+    // (void)out;
+
+    WLclientState* state = client;
+    xkb_state_update_mask(state->xkb_state, depressed, latched, locked, 0,0, group);
+}
+
+static void wl_keyboardRepeatInfo(void* client, struct wl_keyboard* keyboard, s32 rate, s32 delay) {
+    // AAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA
+    // /* Left as an exercise for the reader */ MY ASS
+    // NOW I HAVE TO void THIS SHIT
+    // DOESENT FUCKING TELL ME HOW xkb WORKS
+    // YET EXPECTS ME TO KNOW
+
+    (void)client;
+    (void)keyboard;
+    (void)rate;
+    (void)delay;
+}
+
+static const struct wl_keyboard_listener g_wl_keyboard_listener = {
+    .keymap = wl_keyboardKeymap,
+    .enter = wl_keyboardEnter,
+    .leave = wl_keyboardLeave,
+    .key = wl_keyboardKey,
+    .modifiers = wl_keyboardModifiers,
+    .repeat_info = wl_keyboardRepeatInfo
+};
+
+
+//
 // SEAT
 //
 
 
 static void wl_seatCapabilities(void* client, struct wl_seat* seat, u32 capabilities) {
+    (void)seat;
+
     WLclientState* state = client;
 
-    u32 hascursor = capabilities & WL_SEAT_CAPABILITY_POINTER;
-
+    b32 hascursor = capabilities & WL_SEAT_CAPABILITY_POINTER;
+    
     if (hascursor && !state->pointer) {
         state->pointer = wl_seat_get_pointer(state->seat);
         wl_pointer_add_listener(state->pointer, &g_wl_pointer_listener, state);
     } else if (!hascursor && state->pointer) {
         wl_pointer_release(state->pointer);
         state->pointer = 0;
+    }
+
+    b32 haskeyboard = capabilities & WL_SEAT_CAPABILITY_KEYBOARD;
+
+    if (haskeyboard && !state->keyboard) {
+        state->keyboard = wl_seat_get_keyboard(state->seat);
+        wl_keyboard_add_listener(state->keyboard, &g_wl_keyboard_listener, state);
+    } else if (!haskeyboard && state->keyboard) {
+        wl_keyboard_release(state->keyboard);
+        state->keyboard = 0;
     }
 }
 
@@ -474,6 +610,15 @@ static const struct wl_registry_listener g_wl_registry_listener = {
 void* cc_wl_platformInit(const char* title, s32 targwidth, s32 targheight) {
     WLclientState* state = malloc(sizeof(WLclientState));
 
+    state->cc.width = targwidth;
+    state->cc.height = targheight;
+    state->cc.stride = state->cc.width * 4; 
+    state->cc.pool_size = state->cc.stride * state->cc.height * 2;
+    state->cc.size = state->cc.pool_size / 2;
+    state->cc.running = 1;
+
+    state->xkb_context = xkb_context_new(XKB_CONTEXT_NO_FLAGS);;
+
     state->display = wl_display_connect(NULL);
     state->registry = wl_display_get_registry(state->display);
     wl_registry_add_listener(state->registry, &g_wl_registry_listener, state);
@@ -486,12 +631,7 @@ void* cc_wl_platformInit(const char* title, s32 targwidth, s32 targheight) {
     state->xdg_toplevel = xdg_surface_get_toplevel(state->xdg_surface);
     xdg_toplevel_set_title(state->xdg_toplevel, title);
 
-    state->cc.width = targwidth;
-    state->cc.height = targheight;
-    state->cc.stride = state->cc.width * 4; 
-    state->cc.pool_size = state->cc.stride * state->cc.height * 2;
-    state->cc.size = state->cc.pool_size / 2;
-    state->cc.running = 1;
+    
 
     wl_surface_commit(state->surface);
 
