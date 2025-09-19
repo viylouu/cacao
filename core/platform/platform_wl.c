@@ -138,6 +138,9 @@ static const struct wl_buffer_listener g_wl_buffer_listener = {
 static struct wl_buffer* wl_drawFrame(void* client) {
     WLclientState* state = client;
 
+    state->cc.stride = state->cc.width * 4;
+    state->cc.size = state->cc.stride * state->cc.height;
+
     s32 filedesc = wl_allocSharedMemFile(state->cc.size);
     if (filedesc == -1)
         return NULL;
@@ -185,6 +188,41 @@ static void xdg_surfaceConfigure(void* client, struct xdg_surface* xdg_surface, 
 
 static const struct xdg_surface_listener g_xdg_surface_listener = {
     .configure = xdg_surfaceConfigure
+};
+
+
+//
+// XDG TOPLEVEL
+//
+
+
+static void xdg_toplevelConfigure(void* client, struct xdg_toplevel* toplevel, s32 width, s32 height, struct wl_array* states) {
+    // FINALLY ITS states INSTEAD OF state
+    // YESSSSSSSSSSSS
+    
+    (void)toplevel;
+    (void)states;
+
+    WLclientState* state = client;
+
+    if (!width || !height)
+        return;
+
+    state->cc.width = width;
+    state->cc.height = height;
+}
+
+static void xdg_toplevelClose(void* client, struct xdg_toplevel* toplevel) {
+    (void)toplevel;
+    
+    WLclientState* state = client;
+
+    state->cc.running = 0;
+}
+
+static const struct xdg_toplevel_listener g_xdg_toplevel_listener = {
+    .configure = xdg_toplevelConfigure,
+    .close = xdg_toplevelClose
 };
 
 
@@ -629,15 +667,13 @@ void* cc_wl_platformInit(const char* title, s32 targwidth, s32 targheight) {
     xdg_surface_add_listener(state->xdg_surface, &g_xdg_surface_listener, state);
 
     state->xdg_toplevel = xdg_surface_get_toplevel(state->xdg_surface);
+    xdg_toplevel_add_listener(state->xdg_toplevel, &g_xdg_toplevel_listener, state);
     xdg_toplevel_set_title(state->xdg_toplevel, title);
-
-    
 
     wl_surface_commit(state->surface);
 
     struct wl_callback* callback = wl_surface_frame(state->surface);
     wl_callback_add_listener(callback, &g_wl_surface_frame_listener, state);
-
 
     return state;
 }
