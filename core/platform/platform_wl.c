@@ -1,8 +1,11 @@
 #define _POSIX_C_SOURCE 200112L
 
+// resources used
+// https://wayland-book.com/
+// https://amini-allight.org/post/using-wayland-with-vulkan
+
 #include "platform.h"
 
-#include <errno.h>
 #include <stdio.h>
 #include <string.h>
 #include <stdlib.h>
@@ -47,7 +50,7 @@ typedef struct {
     struct wl_display* display;
     struct wl_registry* registry;
     struct wl_compositor* compositor;
-    struct wl_shm* shared_mem;
+    //struct wl_shm* shared_mem;
     struct wl_surface* surface;
     struct wl_seat* seat;
     struct wl_keyboard* keyboard;
@@ -57,8 +60,8 @@ typedef struct {
     struct xdg_surface* xdg_surface;
     struct xdg_toplevel* xdg_toplevel;
 
-    f32 offset;
-    u32 last_frame;
+    //f32 offset;
+    //u32 last_frame;
 
     WLpointerEvent pointer_event;
 
@@ -73,7 +76,7 @@ typedef struct {
 //
 
 
-static void wl_randName(char* buf) {
+/*static void wl_randName(char* buf) {
     struct timespec ts;
     clock_gettime(CLOCK_REALTIME, &ts);
     s64 r = ts.tv_nsec;
@@ -111,7 +114,7 @@ s32 wl_allocSharedMemFile(size_t size) {
         return -1;
     }
     return filedesc;
-}
+}*/
 
 
 //
@@ -119,7 +122,7 @@ s32 wl_allocSharedMemFile(size_t size) {
 //
 
 
-static void wl_bufferRelease(void* client, struct wl_buffer* buffer) {
+/*static void wl_bufferRelease(void* client, struct wl_buffer* buffer) {
     (void)client;
 
     wl_buffer_destroy(buffer);
@@ -127,7 +130,7 @@ static void wl_bufferRelease(void* client, struct wl_buffer* buffer) {
 
 static const struct wl_buffer_listener g_wl_buffer_listener = {
     .release = wl_bufferRelease
-};
+};*/
 
 
 //
@@ -135,7 +138,7 @@ static const struct wl_buffer_listener g_wl_buffer_listener = {
 //
 
 
-static struct wl_buffer* wl_drawFrame(void* client) {
+/*static struct wl_buffer* wl_drawFrame(void* client) {
     WLclientState* state = client;
 
     state->cc.stride = state->cc.width * 4;
@@ -168,7 +171,7 @@ static struct wl_buffer* wl_drawFrame(void* client) {
     munmap(data, state->cc.size);
     wl_buffer_add_listener(buffer, &g_wl_buffer_listener, NULL);
     return buffer;
-}
+}*/
 
 
 //
@@ -177,13 +180,13 @@ static struct wl_buffer* wl_drawFrame(void* client) {
 
 
 static void xdg_surfaceConfigure(void* client, struct xdg_surface* xdg_surface, u32 serial) {
-    WLclientState* state = client;
+    (void)client;
 
     xdg_surface_ack_configure(xdg_surface, serial);
 
-    struct wl_buffer* buffer = wl_drawFrame(state);
-    wl_surface_attach(state->surface, buffer, 0,0);
-    wl_surface_commit(state->surface);
+    //struct wl_buffer* buffer = wl_drawFrame(state);
+    //wl_surface_attach(state->surface, buffer, 0,0);
+    //wl_surface_commit(state->surface);
 }
 
 static const struct xdg_surface_listener g_xdg_surface_listener = {
@@ -247,7 +250,7 @@ static const struct xdg_wm_base_listener g_xdg_shell_listener = {
 //
 
 
-static const struct wl_callback_listener g_wl_surface_frame_listener;
+/*static const struct wl_callback_listener g_wl_surface_frame_listener;
 
 static void wl_surfaceFrameDone(void* client, struct wl_callback* callback, u32 time) {
     wl_callback_destroy(callback);
@@ -272,7 +275,7 @@ static void wl_surfaceFrameDone(void* client, struct wl_callback* callback, u32 
 
 static const struct wl_callback_listener g_wl_surface_frame_listener = {
     .done = wl_surfaceFrameDone
-};
+};*/
 
 
 //
@@ -369,6 +372,8 @@ static void wl_pointerAxisDiscrete(void* client, struct wl_pointer* pointer, u32
 }
 
 static void wl_pointerFrame(void* client, struct wl_pointer* pointer) {
+    (void)pointer;
+
     WLclientState* state = client;
     WLpointerEvent* event = &state->pointer_event;
     printf("pointer frame @ %d: ", event->time);
@@ -448,6 +453,8 @@ static const struct wl_pointer_listener g_wl_pointer_listener = {
 
 
 static void wl_keyboardKeymap(void* client, struct wl_keyboard* keyboard, u32 format, s32 filedesc, u32 size) {
+    (void)keyboard;
+
     WLclientState* state = client;
 
     if (format != WL_KEYBOARD_KEYMAP_FORMAT_XKB_V1) {
@@ -610,15 +617,15 @@ static const struct wl_seat_listener g_wl_seat_listener = {
 //
 
 
-static void wl_registryHandleGlobal(void* client, struct wl_registry* registry, u32 name, const char* interface, u32 version) {
+static void wl_registryGlobal(void* client, struct wl_registry* registry, u32 name, const char* interface, u32 version) {
     (void)version;
 
     WLclientState* state = client;
 
     if (!strcmp(interface, wl_compositor_interface.name))
         state->compositor = wl_registry_bind(registry, name, &wl_compositor_interface, 4);
-    else if (!strcmp(interface, wl_shm_interface.name))
-        state->shared_mem = wl_registry_bind(registry, name, &wl_shm_interface, 1);
+    //else if (!strcmp(interface, wl_shm_interface.name))
+    //    state->shared_mem = wl_registry_bind(registry, name, &wl_shm_interface, 1);
     else if (!strcmp(interface, xdg_wm_base_interface.name)) {
         state->xdg_shell = wl_registry_bind(registry, name, &xdg_wm_base_interface, 1);
         xdg_wm_base_add_listener(state->xdg_shell, &g_xdg_shell_listener, state);
@@ -628,15 +635,15 @@ static void wl_registryHandleGlobal(void* client, struct wl_registry* registry, 
     }
 }
 
-static void wl_registryHandleGlobalRemove(void* client, struct wl_registry* registry, u32 name) {
+static void wl_registryGlobalRemove(void* client, struct wl_registry* registry, u32 name) {
     (void)client;
     (void)registry;
     (void)name;
 }
 
 static const struct wl_registry_listener g_wl_registry_listener = {
-    .global = wl_registryHandleGlobal,
-    .global_remove = wl_registryHandleGlobalRemove
+    .global = wl_registryGlobal,
+    .global_remove = wl_registryGlobalRemove
 };
 
 
@@ -671,9 +678,11 @@ void* cc_wl_platformInit(const char* title, s32 targwidth, s32 targheight) {
     xdg_toplevel_set_title(state->xdg_toplevel, title);
 
     wl_surface_commit(state->surface);
+    wl_display_roundtrip(state->display);
+    wl_surface_commit(state->surface);
 
-    struct wl_callback* callback = wl_surface_frame(state->surface);
-    wl_callback_add_listener(callback, &g_wl_surface_frame_listener, state);
+    //struct wl_callback* callback = wl_surface_frame(state->surface);
+    //wl_callback_add_listener(callback, &g_wl_surface_frame_listener, state);
 
     return state;
 }
@@ -686,6 +695,13 @@ s8 cc_wl_platformIsRunning(void* client) {
 s8 cc_wl_platformDeinit(void* client) {
     WLclientState* state = (WLclientState*)client;
 
+    wl_seat_destroy(state->seat);
+    xdg_toplevel_destroy(state->xdg_toplevel);
+    xdg_surface_destroy(state->xdg_surface);
+    wl_surface_destroy(state->surface);
+    xdg_wm_base_destroy(state->xdg_shell);
+    wl_compositor_destroy(state->compositor);
+    wl_registry_destroy(state->registry);
     wl_display_disconnect(state->display);
 
     return 0;
