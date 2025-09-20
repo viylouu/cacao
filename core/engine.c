@@ -5,6 +5,7 @@
 
 #include <core/platform/platform.h>
 #include <core/macros/macros.h>
+#include <core/renderer/renderer.h>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -39,6 +40,7 @@ s32 cc_engineMain(
     void (*clean)(void)
 ) {
     void* state = cc_platformInit(title, width,height);
+    void* rstate = cc_rendererInit(CC_API_VULKAN, title);
 
     init();
 
@@ -57,6 +59,7 @@ s32 cc_engineMain(
 
     clean();
 
+    cc_rendererDeinit(rstate);
     cc_platformDeinit(state);
 
     return 0;

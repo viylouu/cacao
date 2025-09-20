@@ -704,6 +704,8 @@ s8 cc_wl_platformDeinit(void* client) {
     wl_registry_destroy(state->registry);
     wl_display_disconnect(state->display);
 
+    free(state);
+
     return 0;
 }
 

@@ -30,9 +30,9 @@ else
 fi
 
 if $BUILD_WINDOWS; then
-    CFLAGS+=" -target x86_64-windows-gnu -lopengl32"
+    CFLAGS+=" -target x86_64-windows-gnu -lvulkan"
 else
-    CFLAGS+=" -lwayland-egl -lwayland-client -lxcb -lrt -lxkbcommon"
+    CFLAGS+=" -lvulkan -lwayland-client -lxcb -lrt -lxkbcommon"
 fi
 
 if [ -n "$EXAMPLE" ]; then
