@@ -7,7 +7,7 @@ void init(void) {}
 void update(void) {
     //printf("checking key %d\n", XKB_KEY_A);
 
-    //printf("%d ", (s32)(1.f/cc_delta));
+    printf("%d ", (s32)(1.f/cc_delta));
     if (cc_isKeyHeld(XKB_KEY_A))
         printf("key a pressed\n");
 }

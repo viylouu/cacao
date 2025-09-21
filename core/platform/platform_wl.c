@@ -672,6 +672,7 @@ void* cc_wl_platformInit(CCrendererApi api, const char* title, s32 targwidth, s3
             state->egl.window = wl_egl_window_create(state->surface, state->cc.width, state->cc.height);
             state->egl.surface = eglCreateWindowSurface(state->egl.display, state->egl.config, state->egl.window, NULL);
             eglMakeCurrent(state->egl.display, state->egl.surface, state->egl.surface, state->egl.context);
+            eglSwapInterval(state->egl.display, 0);
             break;
     }
 
