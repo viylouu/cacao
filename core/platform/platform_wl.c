@@ -3,6 +3,7 @@
 // resources used
 // https://wayland-book.com/
 // https://amini-allight.org/post/using-wayland-with-vulkan
+// https://github.com/joone/opengl-wayland/blob/master/simple-egl/simple-egl.c
 
 #include "platform.h"
 
@@ -16,6 +17,10 @@
 #include <wayland-client.h>
 #include <xdg-shell/xdg-shell-client-protocol.h>
 #include <xkbcommon/xkbcommon.h>
+
+#include <wayland-egl.h>
+#include <GLES2/gl2.h>
+#include <EGL/egl.h>
 
 typedef enum {
     POINTER_EVENT_ENTER         = 1 << 0,
@@ -50,24 +55,38 @@ typedef struct {
     struct wl_display* display;
     struct wl_registry* registry;
     struct wl_compositor* compositor;
-    //struct wl_shm* shared_mem;
+    struct wl_shm* shared_mem;
     struct wl_surface* surface;
     struct wl_seat* seat;
     struct wl_keyboard* keyboard;
     struct wl_pointer* pointer;
+    struct wl_cursor_theme* cursor_theme;
+    struct wl_cursor* cursor;
+    struct wl_surface* cursor_surface;
+    struct wl_callback* callback;
     
     struct xdg_wm_base* xdg_shell;
     struct xdg_surface* xdg_surface;
     struct xdg_toplevel* xdg_toplevel;
-
-    //f32 offset;
-    //u32 last_frame;
 
     WLpointerEvent pointer_event;
 
     struct xkb_state* xkb_state;
     struct xkb_context* xkb_context;
     struct xkb_keymap* xkb_keymap;
+
+    CCrendererApi api;
+    struct {
+        EGLDisplay display;
+        EGLContext context;
+        EGLConfig config;
+        EGLSurface surface;
+        struct wl_egl_window* window;
+
+        b8 configured;
+        b8 opaque;
+    } egl;
+    
 } WLclientState;
 
 
@@ -180,13 +199,19 @@ static const struct wl_buffer_listener g_wl_buffer_listener = {
 
 
 static void xdg_surfaceConfigure(void* client, struct xdg_surface* xdg_surface, u32 serial) {
-    (void)client;
+    WLclientState* state = client;
 
     xdg_surface_ack_configure(xdg_surface, serial);
 
     //struct wl_buffer* buffer = wl_drawFrame(state);
     //wl_surface_attach(state->surface, buffer, 0,0);
     //wl_surface_commit(state->surface);
+
+    if (!state->egl.configured) {
+        eglSwapBuffers(state->egl.display, state->egl.surface);
+        wl_surface_commit(state->surface);
+        state->egl.configured = 1;
+    }
 }
 
 static const struct xdg_surface_listener g_xdg_surface_listener = {
@@ -213,6 +238,14 @@ static void xdg_toplevelConfigure(void* client, struct xdg_toplevel* toplevel, s
 
     state->cc.width = width;
     state->cc.height = height;
+
+    switch (state->api) {
+        case CC_API_VULKAN: break; // see below
+        case CC_API_OPENGL:
+            wl_egl_window_resize(state->egl.window, width, height, 0,0);
+            glViewport(0,0, width, height);
+            break;
+    }
 }
 
 static void xdg_toplevelClose(void* client, struct xdg_toplevel* toplevel) {
@@ -648,11 +681,70 @@ static const struct wl_registry_listener g_wl_registry_listener = {
 
 
 //
+// GL/EGL
+//
+
+
+static void egl_init(WLclientState* state) {
+    static const EGLint contextattributes[] = {
+        EGL_CONTEXT_CLIENT_VERSION, 2,
+        EGL_NONE
+    };
+
+    EGLint configattributes[] = {
+        EGL_SURFACE_TYPE, EGL_WINDOW_BIT,
+        EGL_RED_SIZE, 1,
+        EGL_GREEN_SIZE, 1,
+        EGL_BLUE_SIZE, 1,
+        EGL_ALPHA_SIZE, 1,
+        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+        EGL_NONE
+    };
+
+    EGLint major, minor, n;
+    EGLBoolean ret;
+
+    if (state->egl.opaque)
+        configattributes[9] = 0;
+
+    state->egl.display = eglGetDisplay(state->display);
+    if (!state->egl.display) {
+        printf("failed to get egl display!\n");
+        exit(1);
+    }
+
+    ret = eglInitialize(state->egl.display, &major, &minor);
+    if (!ret) {
+        printf("failed to initialize egl!\n");
+        exit(1);
+    }
+
+    ret = eglBindAPI(EGL_OPENGL_ES_API);
+    if (!ret) {
+        printf("failed to bind gl|es api!\n");
+        exit(1);
+    }
+
+    ret = eglChooseConfig(state->egl.display, configattributes, &state->egl.config, 1, &n);
+    if (!ret || n != 1) {
+        printf("failed to choose egl config!\n");
+        exit(1);
+    }
+
+    state->egl.context = eglCreateContext(state->egl.display, state->egl.config, EGL_NO_CONTEXT, contextattributes);
+    if (!state->egl.context) {
+        printf("failed to create egl context!\n");
+        exit(1);
+    }
+}
+
+
+//
 // MAIN
 //
 
 
-void* cc_wl_platformInit(const char* title, s32 targwidth, s32 targheight) {
+void* cc_wl_platformInit(CCrendererApi api, const char* title, s32 targwidth, s32 targheight) {
     WLclientState* state = malloc(sizeof(WLclientState));
 
     state->cc.width = targwidth;
@@ -662,12 +754,34 @@ void* cc_wl_platformInit(const char* title, s32 targwidth, s32 targheight) {
     state->cc.size = state->cc.pool_size / 2;
     state->cc.running = 1;
 
-    state->xkb_context = xkb_context_new(XKB_CONTEXT_NO_FLAGS);;
+    state->api = api;
+
+    switch(api) {
+        case CC_API_VULKAN: printf("API UNSUPPORTED!\n"); exit(1);
+        case CC_API_OPENGL:
+            state->egl.opaque = 1;
+            break;
+    }
+
+    state->xkb_context = xkb_context_new(XKB_CONTEXT_NO_FLAGS);
 
     state->display = wl_display_connect(NULL);
     state->registry = wl_display_get_registry(state->display);
     wl_registry_add_listener(state->registry, &g_wl_registry_listener, state);
     wl_display_roundtrip(state->display);
+
+    switch(api) {
+        case CC_API_VULKAN: break; // if you got here, then...
+                                   // 
+                                   // uhh...
+                                   // 
+                                   // 
+                                   // 
+                                   // what the fuck?
+        case CC_API_OPENGL:
+            egl_init(state);
+            break;
+    }
 
     state->surface = wl_compositor_create_surface(state->compositor);
     state->xdg_surface = xdg_wm_base_get_xdg_surface(state->xdg_shell, state->surface);
@@ -676,6 +790,15 @@ void* cc_wl_platformInit(const char* title, s32 targwidth, s32 targheight) {
     state->xdg_toplevel = xdg_surface_get_toplevel(state->xdg_surface);
     xdg_toplevel_add_listener(state->xdg_toplevel, &g_xdg_toplevel_listener, state);
     xdg_toplevel_set_title(state->xdg_toplevel, title);
+
+    switch (api) {
+        case CC_API_VULKAN: break; // see above
+        case CC_API_OPENGL:
+            state->egl.window = wl_egl_window_create(state->surface, state->cc.width, state->cc.height);
+            state->egl.surface = eglCreateWindowSurface(state->egl.display, state->egl.config, state->egl.window, NULL);
+            eglMakeCurrent(state->egl.display, state->egl.surface, state->egl.surface, state->egl.context);
+            break;
+    }
 
     wl_surface_commit(state->surface);
     wl_display_roundtrip(state->display);
@@ -692,8 +815,16 @@ s8 cc_wl_platformIsRunning(void* client) {
     return wl_display_dispatch(state->display) != -1 && state->cc.running;
 }
 
-s8 cc_wl_platformDeinit(void* client) {
-    WLclientState* state = (WLclientState*)client;
+void cc_wl_platformDeinit(void* client) {
+    WLclientState* state = client;
+
+    switch (state->api) {
+        case CC_API_VULKAN: break; // see above above
+        case CC_API_OPENGL:
+            eglTerminate(state->egl.display);
+            eglReleaseThread();
+            break;
+    }
 
     wl_seat_destroy(state->seat);
     xdg_toplevel_destroy(state->xdg_toplevel);
@@ -705,7 +836,10 @@ s8 cc_wl_platformDeinit(void* client) {
     wl_display_disconnect(state->display);
 
     free(state);
-
-    return 0;
 }
 
+void cc_wl_platformSwapBuffers(void* client) {
+    WLclientState* state = client;
+
+    eglSwapBuffers(state->egl.display, state->egl.surface);
+}

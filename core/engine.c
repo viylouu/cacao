@@ -39,8 +39,8 @@ s32 cc_engineMain(
     void (*render)(void),
     void (*clean)(void)
 ) {
-    void* state = cc_platformInit(title, width,height);
-    void* rstate = cc_rendererInit(CC_API_VULKAN, title);
+    void* state = cc_platformInit(CC_API_OPENGL, title, width,height);
+    void* rstate = cc_rendererInit(CC_API_OPENGL, title);
 
     init();
 

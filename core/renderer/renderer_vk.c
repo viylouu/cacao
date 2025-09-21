@@ -44,11 +44,30 @@ void vk_instanceCreate(VKrendererState* state, const char* title) {
 
 
 //
+// QUEUE FAMILIES
+//
+
+
+typedef struct {
+    u32 graphics_family;
+    b8 has_graphics_family;
+} VKqueueFamilyIndices;
+
+VKqueueFamilyIndices vk_getQueueFamilies(VkPhysicalDevice device) {
+    VKqueueFamilyIndices indices = {0};
+
+    return indices;
+}
+
+
+//
 // PHYSICAL DEVICE
 //
 
 
 b8 vk_isDeviceSuitable(VkPhysicalDevice device) {
+    (void)device;
+
     return 1;
 }
 
