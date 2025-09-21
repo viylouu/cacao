@@ -627,6 +627,8 @@ static void egl_init(WLclientState* state) {
 
 
 void* cc_wl_platformInit(CCrendererApi api, const char* title, s32 targwidth, s32 targheight) {
+    if (api == CC_API_VULKAN) { printf("api not supported!\n"); exit(1); }
+
     WLclientState* state = malloc(sizeof(WLclientState));
 
     state->cc.width = targwidth;
