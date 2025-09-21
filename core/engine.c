@@ -6,6 +6,7 @@
 #include <core/platform/platform.h>
 #include <core/macros/macros.h>
 #include <core/renderer/renderer.h>
+#include <core/input/input.h>
 
 #ifdef _WIN32
 #include <windows.h>
@@ -51,6 +52,8 @@ s32 cc_engineMain(
         cc_time = getTime() - starttime;
         cc_delta = cc_time - ltime;
 
+        cc_inputPoll();
+
         update();
         render();
 
@@ -59,6 +62,7 @@ s32 cc_engineMain(
 
     clean();
 
+    cc_inputDeinit();
     cc_rendererDeinit(rstate);
     cc_platformDeinit(state);
 

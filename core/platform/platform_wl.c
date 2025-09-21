@@ -6,6 +6,7 @@
 // https://github.com/joone/opengl-wayland/blob/master/simple-egl/simple-egl.c
 
 #include "platform.h"
+#include <core/input/input.h>
 
 #include <stdio.h>
 #include <string.h>
@@ -94,10 +95,15 @@ static void xdg_surfaceConfigure(void* client, struct xdg_surface* xdg_surface, 
 
     xdg_surface_ack_configure(xdg_surface, serial);
 
-    if (!state->egl.configured) {
-        eglSwapBuffers(state->egl.display, state->egl.surface);
-        wl_surface_commit(state->surface);
-        state->egl.configured = 1;
+    switch (state->api) {
+        case CC_API_VULKAN: break; // see below below
+        case CC_API_OPENGL:
+            if (!state->egl.configured) {
+                eglSwapBuffers(state->egl.display, state->egl.surface);
+                wl_surface_commit(state->surface);
+                state->egl.configured = 1;
+            }
+            break;
     }
 }
 
@@ -263,28 +269,35 @@ static void wl_pointerFrame(void* client, struct wl_pointer* pointer) {
 
     WLclientState* state = client;
     WLpointerEvent* event = &state->pointer_event;
-    printf("pointer frame @ %d: ", event->time);
+    //printf("pointer frame @ %d: ", event->time);
 
     if (event->event_mask & POINTER_EVENT_ENTER) {
-        printf("entered %f, %f",
+        /*printf("entered %f, %f",
                 wl_fixed_to_double(event->surface_x),
                 wl_fixed_to_double(event->surface_y)
-            );
+            );*/
+        cc_mouse_x = wl_fixed_to_double(event->surface_x);
+        cc_mouse_y = wl_fixed_to_double(event->surface_y);
     }
 
     if (event->event_mask & POINTER_EVENT_LEAVE) {
-        printf("leave");
+        //printf("leave");
     }
 
     if (event->event_mask & POINTER_EVENT_MOTION) {
-        printf("motion %f, %f ",
+        /*printf("motion %f, %f ",
                 wl_fixed_to_double(event->surface_x),
-                wl_fixed_to_double(event->surface_y));
+                wl_fixed_to_double(event->surface_y));*/
+        cc_mouse_x = wl_fixed_to_double(event->surface_x);
+        cc_mouse_y = wl_fixed_to_double(event->surface_y);
     }
 
     if (event->event_mask & POINTER_EVENT_BUTTON) {
-        char* stateSTOPFUCKINGNAMINGTHINGSSTATE = event->state == WL_POINTER_BUTTON_STATE_RELEASED ? "released" : "pressed";
-        printf("button %d %s ", event->button, stateSTOPFUCKINGNAMINGTHINGSSTATE);
+        //char* stateSTOPFUCKINGNAMINGTHINGSSTATE = event->state == WL_POINTER_BUTTON_STATE_RELEASED ? "released" : "pressed";
+        //printf("button %d %s ", event->button, stateSTOPFUCKINGNAMINGTHINGSSTATE);
+
+        // yay no more state variable!!!!!!!!!!!!
+        cc_mouse_buttons[event->button - CC_MOUSE_LEFT] = event->state == WL_POINTER_BUTTON_STATE_RELEASED;
     }
 
     u32 axis_events = POINTER_EVENT_AXIS
@@ -317,7 +330,7 @@ static void wl_pointerFrame(void* client, struct wl_pointer* pointer) {
                 printf("(stopped) ");
         }
 
-    printf("\n");
+    //printf("\n");
     memset(event, 0, sizeof(*event));
 }
 
@@ -372,14 +385,17 @@ static void wl_keyboardEnter(void* client, struct wl_keyboard* keyboard, u32 ser
     //
     // no
     
+    (void)client;
     (void)keyboard;
     (void)serial;
+    (void)serial;
     (void)surface;
+    (void)kys;
 
-    WLclientState* state = client;
+    //WLclientState* state = client;
 
-    printf("keeb enter; pressed keys:\n");
-    u32* key;
+    //printf("keeb enter; pressed keys:\n");
+    /*u32* key;
     wl_array_for_each(key, kys) {
         char buf[128];
         xkb_keysym_t sym = xkb_state_key_get_one_sym(state->xkb_state, *key + 8);
@@ -387,24 +403,27 @@ static void wl_keyboardEnter(void* client, struct wl_keyboard* keyboard, u32 ser
         printf("sym: %-12s (%d), ", buf, sym);
         xkb_state_key_get_utf8(state->xkb_state, *key + 8, buf, sizeof(buf));
         printf("utf8: '%s'\n", buf);
-    }
+    }*/
 }
 
 static void wl_keyboardKey(void* client, struct wl_keyboard* keyboard, u32 cereal, u32 queTiempoHaceHoyHaceMalTiempo, u32 key, u32 stateAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) {
     (void)keyboard;
     (void)cereal;
     (void)queTiempoHaceHoyHaceMalTiempo;
+    (void)stateAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA;
 
     WLclientState* state = client;
     
-    char buf[128];
+    //char buf[128];
     u32 keycode = key + 8;
     xkb_keysym_t sym = xkb_state_key_get_one_sym(state->xkb_state, keycode);
-    xkb_keysym_get_name(sym, buf, sizeof(buf));
-    const char* action = stateAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA == WL_KEYBOARD_KEY_STATE_PRESSED ? "press" : "release";
-    printf("key %s: sym: %-12s (%d), ", action, buf, sym);
-    xkb_state_key_get_utf8(state->xkb_state, keycode, buf, sizeof(buf));
-    printf("utf8: '%s'\n", buf);
+    //xkb_keysym_get_name(sym, buf, sizeof(buf));
+    //const char* action = stateAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA == WL_KEYBOARD_KEY_STATE_PRESSED ? "press" : "release";
+    //printf("key %s: sym: %-12s (%d), ", action, buf, sym);
+    //xkb_state_key_get_utf8(state->xkb_state, keycode, buf, sizeof(buf));
+    //printf("utf8: '%s'\n", buf);
+
+    cc_addDirtyKey(sym);
 }
 
 static void wl_keyboardLeave(void* client, struct wl_keyboard* keyboard, u32 serial, struct wl_surface* surface) {
@@ -414,7 +433,7 @@ static void wl_keyboardLeave(void* client, struct wl_keyboard* keyboard, u32 ser
     (void)serial;
     (void)surface;
     
-    printf("keyboard leave\n");
+    //printf("keyboard leave\n");
 }
 
 static void wl_keyboardModifiers(void* client, struct wl_keyboard* keyboard, u32 serial, u32 depressed, u32 latched, u32 locked, u32 group/*, u32 fuck, u32 this, u32 shit, u32 im, u32 out*/) {
@@ -489,8 +508,9 @@ static void wl_seatCapabilities(void* client, struct wl_seat* seat, u32 capabili
 static void wl_seatName(void* client, struct wl_seat* seat, const char* name) {
     (void)client;
     (void)seat;
+    (void)name;
 
-    printf("seat name: %s\n", name);
+    //printf("seat name: %s\n", name);
 }
 
 static const struct wl_seat_listener g_wl_seat_listener = {

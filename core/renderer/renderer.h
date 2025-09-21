@@ -3,7 +3,6 @@
 
 #include <core/macros/macros.h>
 
-
 void* cc_vk_rendererInit(const char* title);
 void cc_vk_rendererDeinit(void* state);
 

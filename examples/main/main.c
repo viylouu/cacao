@@ -1,5 +1,4 @@
 #include <core/engine.h>
-#include <stdio.h>
 
 void init(void) {}
 
@@ -7,7 +6,12 @@ void update(void) {
     //printf("%d ", (s32)(1.f/cc_delta));
 }
 
-void render(void) {}
+#include <GLES2/gl2.h>
+void render(void) {
+    glClearColor(.2,.3,.4,1);
+    glClear(GL_COLOR_BUFFER_BIT);
+}
+
 void clean(void) {}
 
 int main(void) {
