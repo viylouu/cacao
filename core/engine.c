@@ -53,6 +53,8 @@ s32 cc_engineMain(
         cc_delta = cc_time - ltime;
 
         cc_inputPoll();
+        
+        cc_rendererUpdate(rstate, state);
 
         update();
         render();

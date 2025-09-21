@@ -5,6 +5,18 @@
 // https://amini-allight.org/post/using-wayland-with-vulkan
 // https://github.com/joone/opengl-wayland/blob/master/simple-egl/simple-egl.c
 
+// table of contents:
+//  TYPES
+//  XDG SURFACE
+//  XDG TOPLEVEL
+//  POINTER
+//  KEYBOARD
+//  SEAT
+//  REGISTRY
+//  GL/EGL
+//  MAIN
+//
+
 #include "platform.h"
 #include <core/input/input.h>
 
@@ -22,6 +34,12 @@
 #include <wayland-egl.h>
 #include <GLES2/gl2.h>
 #include <EGL/egl.h>
+
+
+//
+// TYPES
+//
+
 
 typedef enum {
     POINTER_EVENT_ENTER         = 1 << 0,

@@ -2,7 +2,6 @@
 #define CC_PLATFORM_H
 
 #include <core/macros/macros.h>
-#include <core/renderer/renderer.h>
 
 typedef struct {
     s32 width;
@@ -13,6 +12,11 @@ typedef struct {
     b8 running;
     b8 fullscreen;
 } CCclientState;
+
+typedef enum {
+    CC_API_VULKAN,
+    CC_API_OPENGL
+} CCrendererApi;
 
 void* cc_wl_platformInit(CCrendererApi api, const char* title, s32 targwidth, s32 targheight);
 s8 cc_wl_platformIsRunning(void* state);

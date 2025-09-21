@@ -1,0 +1,44 @@
+#ifndef CC_RENDERER_GL_LOADER_H
+#define CC_RENDERER_GL_LOADER_H
+
+#include <GL/gl.h>
+#include <stdlib.h>
+
+#define FUNC(name, ret_type, ...) \
+    typedef ret_type (APIENTRYP name##_t)(__VA_ARGS__); \
+    extern name##_t name
+
+FUNC(glCreateShader, GLuint, GLenum type);
+FUNC(glShaderSource, void, GLuint shader, GLsizei count, const GLchar* const* string, const GLint* length);
+FUNC(glCompileShader, void, GLuint shader);
+FUNC(glGetShaderiv, void, GLuint shader, GLenum pname, GLint* params);
+FUNC(glGetShaderInfoLog, void, GLuint shader, GLsizei bufSize, GLsizei* length, GLchar* infolog);
+FUNC(glDeleteShader, void, GLuint shader);
+
+FUNC(glCreateProgram, GLuint, void);
+FUNC(glAttachShader, void, GLuint program, GLuint shader);
+FUNC(glLinkProgram, void, GLuint program);
+FUNC(glGetProgramiv, void, GLuint program, GLenum pname, GLint* params);
+FUNC(glGetProgramInfoLog, void, GLuint program, GLsizei bufSize, GLsizei* length, GLchar* infoLog);
+FUNC(glDeleteProgram, void, GLuint program);
+
+FUNC(glGenVertexArrays, void, GLsizei n, GLuint* arrays);
+FUNC(glGetUniformLocation, GLint, GLuint program, const GLchar* name);
+FUNC(glGenBuffers, void, GLsizei n, GLuint* buffers);
+FUNC(glBindBuffer, void, GLenum target, GLuint buffer);
+FUNC(glBufferData, void, GLenum target, GLsizeiptr size, const void* data, GLenum usage);
+FUNC(glTexBuffer, void, GLenum target, GLenum internalformat, GLuint buffer);
+
+FUNC(glDeleteVertexArrays, void, GLsizei n, const GLuint* arrays);
+FUNC(glDeleteBuffers, void, GLsizei n, const GLuint* buffers);
+
+FUNC(glUseProgram, void, GLuint program);
+FUNC(glBindVertexArray, void, GLuint array);
+FUNC(glUniformMatrix4fv, void, GLint location, GLsizei count, GLboolean transpose, const GLfloat* value);
+FUNC(glBufferSubData, void, GLenum target, GLintptr offset, GLsizeiptr size, const void* data);
+FUNC(glUniform1i, void, GLint location, GLint v0);
+FUNC(glUniform2f, void, GLint location, GLfloat v0, GLfloat v1);
+FUNC(glUniform4f, void, GLint location, GLfloat v0, GLfloat v1, GLfloat v2, GLfloat v3);
+FUNC(glDrawArraysInstanced, void, GLenum mode, GLint first, GLsizei count, GLsizei instancecount);
+
+#endif

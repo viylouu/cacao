@@ -1,6 +1,7 @@
 #include <core/engine.h>
 #include <core/input/input.h>
 #include <xkbcommon/xkbcommon.h>
+#include <core/renderer/renderer.h>
 
 void init(void) {}
 
@@ -16,6 +17,9 @@ void update(void) {
 void render(void) {
     glClearColor(.2,.3,.4,1);
     glClear(GL_COLOR_BUFFER_BIT);
+
+    cc_gl_rendererSetTint(1,0,0,1);
+    cc_gl_rendererDrawRect(0,0,64,64);
 }
 
 void clean(void) {}
