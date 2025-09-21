@@ -3,8 +3,12 @@
 
 #include <core/macros/macros.h>
 
+extern b8 cc_renderer_use_wayland;
+
 void* cc_vk_rendererInit(const char* title);
 void cc_vk_rendererDeinit(void* state);
+
+void cc_gl_load(void);
 
 void* cc_gl_rendererInit(void);
 void cc_gl_rendererDeinit(void* state);

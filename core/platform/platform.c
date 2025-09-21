@@ -1,14 +1,16 @@
 #include "platform.h"
 
 #include <core/macros/macros.h>
+#include <core/renderer/renderer.h>
 #include <stdlib.h>
 
-s8 g_is_wayland;
+b8 g_is_wayland;
 
 void* cc_platformInit(CCrendererApi api, const char* title, s32 targwidth, s32 targheight) {
 #ifdef _WIN32
 #else
     g_is_wayland = getenv("WAYLAND_DISPLAY") != 0;
+    cc_renderer_use_wayland = g_is_wayland;
     if (g_is_wayland)
         return cc_wl_platformInit(api, title, targwidth, targheight);
     else {} 

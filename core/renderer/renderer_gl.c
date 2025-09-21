@@ -23,12 +23,14 @@ struct {
     } s;
 } bufsgl;
 
+b8 cc_renderer_use_wayland;
+
 f32 proj2d[16];
 
 f32 r,g,b,a;
 
 void* cc_gl_rendererInit(void) {
-    
+    cc_gl_load();
 }
 
 void cc_gl_rendererDeinit(void* state) {
