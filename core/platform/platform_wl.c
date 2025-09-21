@@ -407,10 +407,10 @@ static void wl_keyboardEnter(void* client, struct wl_keyboard* keyboard, u32 ser
 }
 
 static void wl_keyboardKey(void* client, struct wl_keyboard* keyboard, u32 cereal, u32 queTiempoHaceHoyHaceMalTiempo, u32 key, u32 stateAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA) {
+    //(void)client;
     (void)keyboard;
     (void)cereal;
     (void)queTiempoHaceHoyHaceMalTiempo;
-    (void)stateAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA;
 
     WLclientState* state = client;
     
@@ -424,6 +424,7 @@ static void wl_keyboardKey(void* client, struct wl_keyboard* keyboard, u32 cerea
     //printf("utf8: '%s'\n", buf);
 
     cc_addDirtyKey(sym);
+    cc_keyboard_keys[sym] = stateAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAAA == WL_KEYBOARD_KEY_STATE_PRESSED;
 }
 
 static void wl_keyboardLeave(void* client, struct wl_keyboard* keyboard, u32 serial, struct wl_surface* surface) {
@@ -439,6 +440,11 @@ static void wl_keyboardLeave(void* client, struct wl_keyboard* keyboard, u32 ser
 static void wl_keyboardModifiers(void* client, struct wl_keyboard* keyboard, u32 serial, u32 depressed, u32 latched, u32 locked, u32 group/*, u32 fuck, u32 this, u32 shit, u32 im, u32 out*/) {
     (void)keyboard;
     (void)serial;
+    (void)client;
+    (void)depressed;
+    (void)latched;
+    (void)locked;
+    (void)group;
 
     // apparently the compiler doesent like it when i do that
     // (void)fuck;
@@ -447,8 +453,11 @@ static void wl_keyboardModifiers(void* client, struct wl_keyboard* keyboard, u32
     // (void)im;
     // (void)out;
 
-    WLclientState* state = client;
-    xkb_state_update_mask(state->xkb_state, depressed, latched, locked, 0,0, group);
+    //WLclientState* state = client;
+    //xkb_state_update_mask(state->xkb_state, depressed, latched, locked, 0,0, group);
+    
+
+    // fuck this i need shift locked
 }
 
 static void wl_keyboardRepeatInfo(void* client, struct wl_keyboard* keyboard, s32 rate, s32 delay) {
@@ -667,6 +676,8 @@ void* cc_wl_platformInit(CCrendererApi api, const char* title, s32 targwidth, s3
     wl_surface_commit(state->surface);
     wl_display_roundtrip(state->display);
     wl_surface_commit(state->surface);
+
+    xkb_state_update_mask(state->xkb_state, (1 << xkb_keymap_mod_get_index(state->xkb_keymap, "Shift")), 0,0,0,0,0);
 
     return state;
 }

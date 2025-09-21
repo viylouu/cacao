@@ -2,11 +2,12 @@
 
 #include <stdlib.h>
 #include <xkbcommon/xkbcommon.h>
+#include <stdio.h>
 
 f64 cc_mouse_x;
 f64 cc_mouse_y;
 
-CCkeyState keys[0x100000fd]; // do not fucking iterate over this!!!!!
+CCkeyState cc_keyboard_keys[0x100000fd]; 
 CCkeyState cc_mouse_buttons[5];
 
 u32* dirty_keys = NULL;
@@ -21,15 +22,16 @@ void cc_inputPoll(void) {
     for (u32 i = 0; i < dirty_key_amt; ++i) {
         u32 k = dirty_keys[i];
 
-        if (keys[k] == CC_STATE_HELD || keys[k] == CC_STATE_RELEASED) {
+        if (cc_keyboard_keys[k] == CC_STATE_HELD || cc_keyboard_keys[k] == CC_STATE_RELEASED) {
             dirty_keys[i] = dirty_keys[dirty_key_amt - 1];
             dirty_key_amt--;
+            continue;
         }
 
-        if (keys[k] == CC_STATE_PRESSED) keys[k] = CC_STATE_HELD;
-        else if (keys[k] == CC_STATE_RELEASED) keys[k] = CC_STATE_INACTIVE;
-        else if (keys[k] == CC_STATE_SPECIAL_PRESSED) keys[k] = CC_STATE_PRESSED;
-        else if (keys[k] == CC_STATE_SPECIAL_RELEASED) keys[k] = CC_STATE_RELEASED;
+        if (cc_keyboard_keys[k] == CC_STATE_PRESSED) cc_keyboard_keys[k] = CC_STATE_HELD;
+        else if (cc_keyboard_keys[k] == CC_STATE_RELEASED) cc_keyboard_keys[k] = CC_STATE_INACTIVE;
+        else if (cc_keyboard_keys[k] == CC_STATE_SPECIAL_PRESSED) cc_keyboard_keys[k] = CC_STATE_PRESSED;
+        else if (cc_keyboard_keys[k] == CC_STATE_SPECIAL_RELEASED) cc_keyboard_keys[k] = CC_STATE_RELEASED;
     }
 
     for (u32 i = 0; i < 5; ++i) {
@@ -45,3 +47,4 @@ void cc_inputDeinit(void) {
     dirty_keys = NULL;
     dirty_key_amt = 0;
 }
+
