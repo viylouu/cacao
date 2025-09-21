@@ -570,7 +570,9 @@ static const struct wl_registry_listener g_wl_registry_listener = {
 
 static void egl_init(WLclientState* state) {
     static const EGLint contextattributes[] = {
-        EGL_CONTEXT_CLIENT_VERSION, 2,
+        EGL_CONTEXT_MAJOR_VERSION, 3,
+        EGL_CONTEXT_MINOR_VERSION, 3,
+        EGL_CONTEXT_OPENGL_PROFILE_MASK, EGL_CONTEXT_OPENGL_CORE_PROFILE_BIT,
         EGL_NONE
     };
 
@@ -580,7 +582,7 @@ static void egl_init(WLclientState* state) {
         EGL_GREEN_SIZE, 1,
         EGL_BLUE_SIZE, 1,
         EGL_ALPHA_SIZE, 1,
-        EGL_RENDERABLE_TYPE, EGL_OPENGL_ES2_BIT,
+        EGL_RENDERABLE_TYPE, EGL_OPENGL_BIT,
         EGL_NONE
     };
 
@@ -599,7 +601,7 @@ static void egl_init(WLclientState* state) {
         exit(1);
     }
 
-    ret = eglBindAPI(EGL_OPENGL_ES_API);
+    ret = eglBindAPI(EGL_OPENGL_API);
     if (!ret) {
         printf("failed to bind gl|es api!\n");
         exit(1);

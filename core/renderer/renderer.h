@@ -6,7 +6,7 @@
 void* cc_vk_rendererInit(const char* title);
 void cc_vk_rendererDeinit(void* state);
 
-void* cc_gl_rendererInit();
+void* cc_gl_rendererInit(void);
 void cc_gl_rendererDeinit(void* state);
 
 
