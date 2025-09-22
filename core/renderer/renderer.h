@@ -7,6 +7,7 @@
 //      SHADERS
 //      MAIN
 //      FUNCS
+//          2D
 //  GENERAL
 
 #include <core/macros/macros.h>
@@ -41,7 +42,10 @@ void cc_gl_rendererUpdate(s32 width, s32 height);
 void cc_gl_rendererDeinit(void);
 
 // FUNCS
+void cc_gl_rendererFlush(void);
 void cc_gl_rendererSetTint(f32 red, f32 green, f32 blue, f32 alpha);
+
+//   2D
 void cc_gl_rendererDrawRect(f32 x, f32 y, f32 w, f32 h);
 
 //
@@ -51,5 +55,6 @@ void cc_gl_rendererDrawRect(f32 x, f32 y, f32 w, f32 h);
 void* cc_rendererInit(CCrendererApi api, const char* title);
 void cc_rendererUpdate(void* state, CCclientState* pstate);
 void cc_rendererDeinit(void* state);
+void cc_rendererFlush(void* state);
 
 #endif

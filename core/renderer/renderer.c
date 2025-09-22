@@ -28,3 +28,10 @@ void cc_rendererDeinit(void* state) {
         case CC_API_OPENGL: return cc_gl_rendererDeinit();
     }
 }
+
+void cc_rendererFlush(void* state) {
+    switch (renderer_api) {
+        case CC_API_VULKAN: return;
+        case CC_API_OPENGL: return cc_gl_rendererFlush();
+    }
+}

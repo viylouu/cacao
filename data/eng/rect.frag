@@ -1,6 +1,6 @@
 #version 330 core
 
-uniform vec4 col;
+flat in vec4 col;
 
 out vec4 oCol;
 

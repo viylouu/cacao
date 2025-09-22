@@ -13,7 +13,8 @@ void update(void) {
         printf("key a pressed\n");
 }
 
-#include <GLES2/gl2.h>
+#include <GL/gl.h>
+
 void render(void) {
     glClearColor(.2,.3,.4,1);
     glClear(GL_COLOR_BUFFER_BIT);

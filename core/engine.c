@@ -59,6 +59,8 @@ s32 cc_engineMain(
         update();
         render();
 
+        cc_rendererFlush(rstate);
+
         cc_platformSwapBuffer(state);
     }
 
