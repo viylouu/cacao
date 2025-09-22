@@ -2,6 +2,7 @@
 #define CC_RENDERER_H
 
 // table of contents:
+//  GENERAL
 //  VULKAN
 //  GL
 //      TEXTURES
@@ -9,13 +10,33 @@
 //      MAIN
 //      FUNCS
 //          2D
-//  GENERAL
+// 
 
 #include <core/macros/macros.h>
 #include <core/platform/platform.h>
 #include <stdlib.h>
 
 extern b8 cc_renderer_use_wayland;
+
+
+
+//
+// GENERAL
+//
+
+typedef struct {
+    void* platform_specific;
+    s32 width;
+    s32 height;
+} CCtexture;
+
+void* cc_rendererInit(CCrendererApi api, const char* title);
+void cc_rendererUpdate(void* state, CCclientState* pstate);
+void cc_rendererDeinit(void* state);
+void cc_rendererFlush(void* state);
+
+void cc_unloadTexture(CCtexture* tex);
+CCtexture* cc_loadTexture(const char* path);
 
 //
 // VULKAN
@@ -33,14 +54,12 @@ void cc_gl_load(void);
 // TEXTURES
 typedef struct {
     u32 id;
-    s32 width;
-    s32 height;
 } GLtexture;
 
-void cc_gl_unloadTexture(GLtexture* tex);
-GLtexture* cc_gl_loadTextureFromData(u8* data, size_t size);
+void cc_gl_unloadTexture(CCtexture* tex);
+CCtexture* cc_gl_loadTextureFromData(u8* data, size_t size);
 char* cc_gl_loadTextureData(const char* path, size_t* out_size);
-GLtexture* cc_gl_loadTexture(const char* path);
+CCtexture* cc_gl_loadTexture(const char* path);
 
 // SHADERS
 u32 cc_gl_compileProgram(u32* shaders, u32 amount);
@@ -61,20 +80,6 @@ void cc_gl_rendererSetTint(f32 red, f32 green, f32 blue, f32 alpha);
 
 //   2D
 void cc_gl_rendererDrawRect(f32 x, f32 y, f32 w, f32 h);
-void cc_gl_rendererDrawTexture(GLtexture* tex, f32 x, f32 y, f32 w, f32 h, f32 sx, f32 sy, f32 sw, f32 sh);
-
-//
-// GENERAL
-//
-
-typedef void CCtexture;
-
-void* cc_rendererInit(CCrendererApi api, const char* title);
-void cc_rendererUpdate(void* state, CCclientState* pstate);
-void cc_rendererDeinit(void* state);
-void cc_rendererFlush(void* state);
-
-void cc_unloadTexture(CCtexture* tex);
-CCtexture* cc_loadTexture(const char* path);
+void cc_gl_rendererDrawTexture(CCtexture* tex, f32 x, f32 y, f32 w, f32 h, f32 sx, f32 sy, f32 sw, f32 sh);
 
 #endif

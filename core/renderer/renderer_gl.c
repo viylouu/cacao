@@ -85,7 +85,7 @@ struct {
     GLinstanceData* data;
     u32 data_size;
     u32 data_capac;
-    GLtexture* tex;
+    CCtexture* tex;
 } batch;
 
 
@@ -94,12 +94,12 @@ struct {
 //
 
 
-void cc_gl_unloadTexture(GLtexture* tex) {
-    glDeleteTextures(1, &tex->id);
+void cc_gl_unloadTexture(CCtexture* tex) {
+    glDeleteTextures(1, &((GLtexture*)tex->platform_specific)->id);
     free(tex);
 }
 
-GLtexture* cc_gl_loadTextureFromData(u8* data, size_t size) {
+CCtexture* cc_gl_loadTextureFromData(u8* data, size_t size) {
     s32 w, h, c;
     u8* texdata = stbi_load_from_memory(data, size, &w,&h,&c, 4);
     if (!texdata) { printf("failed to load texture!\n"); exit(1); }
@@ -117,8 +117,9 @@ GLtexture* cc_gl_loadTextureFromData(u8* data, size_t size) {
 
     glBindTexture(GL_TEXTURE_2D, 0);
 
-    GLtexture* tex = malloc(sizeof(GLtexture));
-    tex->id = id;
+    CCtexture* tex = malloc(sizeof(CCtexture));
+    tex->platform_specific = malloc(sizeof(GLtexture));
+    ((GLtexture*)tex->platform_specific)->id = id;
     tex->width = w;
     tex->height = h;
 
@@ -148,7 +149,7 @@ char* cc_gl_loadTextureData(const char* path, size_t* out_size) {
     return buffer;
 }
 
-GLtexture* cc_gl_loadTexture(const char* path) {
+CCtexture* cc_gl_loadTexture(const char* path) {
     size_t size;
     char* buf = cc_gl_loadTextureData(path, &size);
     if (!buf) {
@@ -156,7 +157,7 @@ GLtexture* cc_gl_loadTexture(const char* path) {
         exit(1);
     }
 
-    GLtexture* tex = cc_gl_loadTextureFromData((u8*)buf, size);
+    CCtexture* tex = cc_gl_loadTextureFromData((u8*)buf, size);
     free(buf);
 
     if (!tex) {
@@ -429,7 +430,7 @@ void cc_gl_rendererFlush(void) {
             glUniform1i(bufs.s.tex.loc_inst_size, sizeof(GLinstanceData) / 16);
 
             glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, batch.tex->id);
+            glBindTexture(GL_TEXTURE_2D, ((GLtexture*)batch.tex)->id);
             glUniform1i(bufs.s.tex.loc_tex, 1);
 
             glDrawArraysInstanced(GL_TRIANGLES, 0, 6, batch.data_size);
@@ -461,7 +462,7 @@ void cc_gl_rendererDrawRect(f32 x, f32 y, f32 w, f32 h) {
         });
 }
 
-void cc_gl_rendererDrawTexture(GLtexture* tex, f32 x, f32 y, f32 w, f32 h, f32 sx, f32 sy, f32 sw, f32 sh) {
+void cc_gl_rendererDrawTexture(CCtexture* tex, f32 x, f32 y, f32 w, f32 h, f32 sx, f32 sy, f32 sw, f32 sh) {
     if (batch.type != CC_2D_BATCH_TEXTURE) cc_gl_rendererFlush();
     if (batch.data_size >= CC_GL_MAX_BATCH_SIZE) cc_gl_rendererFlush();
     if (!tex) { printf("tf do you expect? you need to initialize a texture!\n"); exit(1); }
