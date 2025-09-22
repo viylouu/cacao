@@ -1,5 +1,8 @@
 #include "renderer.h"
 
+#define STB_IMAGE_IMPLEMENTATION
+#include <stb/stbimage.h>
+
 #include <GL/gl.h>
 #include <stdio.h>
 #include "renderer_gl_loader.h"
@@ -39,6 +42,17 @@ struct {
             s32 loc_insts;
             s32 loc_proj;
         } rect;
+        
+        struct {
+            u32 vao;
+            u32 prog;
+            u32 bo;
+            u32 tbo;
+            s32 loc_inst_size;
+            s32 loc_insts;
+            s32 loc_proj;
+            s32 loc_tex;
+        } tex;
     } s;
 } bufs;
 
@@ -55,12 +69,14 @@ s32 CC_GL_MAX_BUFFER_SIZE;
 typedef struct {
     f32 x, y, w, h;
     f32 r, g, b, a;
+    f32 sx,sy,sw,sh;
 } GLinstanceData;
 #pragma pack()
 
 typedef enum {
     CC_BATCH_NONE,
-    CC_2D_BATCH_RECT
+    CC_2D_BATCH_RECT,
+    CC_2D_BATCH_TEXTURE
 } CCbatchType;
 
 struct {
@@ -68,7 +84,88 @@ struct {
     GLinstanceData* data;
     u32 data_size;
     u32 data_capac;
+    GLtexture* tex;
 } batch;
+
+
+//
+// TEXTURES
+//
+
+
+void cc_gl_unloadTexture(GLtexture* tex) {
+    glDeleteTextures(1, &tex->id);
+    free(tex);
+}
+
+GLtexture* cc_gl_loadTextureFromData(u8* data, size_t size) {
+    s32 w, h, c;
+    u8* texdata = stbi_load_from_memory(data, size, &w,&h,&c, 4);
+    if (!texdata) { printf("failed to load texture!\n"); exit(1); }
+
+    u32 id;
+    glGenTextures(1, &id);
+    glBindTexture(GL_TEXTURE_2D, id);
+
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_S, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_WRAP_T, GL_REPEAT);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MIN_FILTER, GL_NEAREST);
+    glTexParameteri(GL_TEXTURE_2D, GL_TEXTURE_MAG_FILTER, GL_NEAREST);
+
+    glTexImage2D(GL_TEXTURE_2D, 0, GL_RGBA, w,h, 0, GL_RGBA, GL_UNSIGNED_BYTE, texdata);
+
+    glBindTexture(GL_TEXTURE_2D, 0);
+
+    GLtexture* tex = malloc(sizeof(GLtexture));
+    tex->id = id;
+    tex->width = w;
+    tex->height = h;
+
+    return tex;
+}
+
+char* cc_gl_loadTextureData(const char* path, size_t* out_size) {
+    FILE* file = fopen(path, "rb");
+    if (!file) { printf("failed to load texture at \"%s\"!\n", path); exit(1); }
+
+    fseek(file, 0, SEEK_END);
+    long size = ftell(file); // why is it long and not long long so i can use s64? idfk
+    rewind(file);
+
+    char* buffer = malloc(size);
+    if (!buffer) {
+        fclose(file);
+        printf("failed to allocate size for the texture at \"%s\"!\n", path);
+        exit(1);
+    }
+
+    fread(buffer, 1, size, file);
+    fclose(file);
+
+    *out_size = size;
+
+    return buffer;
+}
+
+GLtexture* cc_gl_loadTexture(const char* path) {
+    size_t size;
+    char* buf = cc_gl_loadTextureData(path, &size);
+    if (!buf) {
+        printf("failed to read file at \"%s\"!\n", path);
+        exit(1);
+    }
+
+    GLtexture* tex = cc_gl_loadTextureFromData((u8*)buf, size);
+    free(buf);
+
+    if (!tex) {
+        printf("failed to load texture at \"%s\"!\n", path);
+        exit(1);
+    }
+
+    return tex;
+}
+
 
 //
 // SHADERS
@@ -214,6 +311,11 @@ void cc_gl_rendererInit(void) {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+    //
+    // 2D
+    //
+
+    // RECT
     bufs.s.rect.prog = cc_gl_loadProgram("data/eng/rect.vert", "data/eng/rect.frag");
     glGenVertexArrays(1, &bufs.s.rect.vao);
 
@@ -229,6 +331,23 @@ void cc_gl_rendererInit(void) {
     glBindTexture(GL_TEXTURE_BUFFER, bufs.s.rect.tbo);
     glTexBuffer(GL_TEXTURE_BUFFER, GL_RGBA32F, bufs.s.rect.bo);
 
+    // TEX
+    bufs.s.tex.prog = cc_gl_loadProgram("data/eng/tex.vert", "data/eng/tex.frag");
+    glGenVertexArrays(1, &bufs.s.tex.vao);
+
+    bufs.s.tex.loc_proj      = glGetUniformLocation(bufs.s.tex.prog, "proj");
+    bufs.s.tex.loc_insts     = glGetUniformLocation(bufs.s.tex.prog, "insts");
+    bufs.s.tex.loc_inst_size = glGetUniformLocation(bufs.s.tex.prog, "inst_size");
+    bufs.s.tex.loc_tex       = glGetUniformLocation(bufs.s.tex.prog, "tex");
+
+    glGenBuffers(1, &bufs.s.rect.bo);
+    glBindBuffer(GL_TEXTURE_BUFFER, bufs.s.tex.bo);
+    glBufferData(GL_TEXTURE_BUFFER, CC_GL_MAX_BUFFER_SIZE, NULL, GL_DYNAMIC_DRAW);
+
+    glGenTextures(1, &bufs.s.tex.tbo);
+    glBindTexture(GL_TEXTURE_BUFFER, bufs.s.tex.tbo);
+    glTexBuffer(GL_TEXTURE_BUFFER, GL_RGBA32F, bufs.s.tex.bo);
+
 }
 
 void cc_gl_rendererUpdate(s32 width, s32 height) {
@@ -242,6 +361,11 @@ void cc_gl_rendererDeinit(void) {
     glDeleteBuffers(1, &bufs.s.rect.tbo);
     glDeleteBuffers(1, &bufs.s.rect.bo);
     glDeleteVertexArrays(1, &bufs.s.rect.vao);
+
+    glDeleteProgram(bufs.s.tex.prog);
+    glDeleteBuffers(1, &bufs.s.tex.tbo);
+    glDeleteBuffers(1, &bufs.s.tex.bo);
+    glDeleteVertexArrays(1, &bufs.s.tex.vao);
 }
 
 
@@ -283,14 +407,31 @@ void cc_gl_rendererFlush(void) {
             glBindTexture(GL_TEXTURE_BUFFER, bufs.s.rect.tbo);
             glUniform1i(bufs.s.rect.loc_insts, 0);
 
-            glUniform1i(bufs.s.rect.loc_inst_size, sizeof(GLinstanceData) >> 4);
+            glUniform1i(bufs.s.rect.loc_inst_size, sizeof(GLinstanceData) / 16);
 
             glDrawArraysInstanced(GL_TRIANGLES, 0, 6, batch.data_size);
 
-            //glBindTexture(GL_TEXTURE_BUFFER, 0);
-            //glBindBuffer(GL_TEXTURE_BUFFER, 0);
-            //glBindVertexArray(0);
-            //glUseProgram(0);
+            break;
+        case CC_2D_BATCH_TEXTURE:
+            glUseProgram(bufs.s.tex.prog);
+            glBindVertexArray(bufs.s.tex.vao);
+
+            glUniformMatrix4fv(bufs.s.tex.loc_proj, 1,0, proj2d);
+
+            glBindBuffer(GL_TEXTURE_BUFFER, bufs.s.tex.bo);
+            glBufferSubData(GL_TEXTURE_BUFFER, 0, batch.data_size * sizeof(GLinstanceData), batch.data);
+
+            glActiveTexture(GL_TEXTURE0);
+            glBindTexture(GL_TEXTURE_BUFFER, bufs.s.tex.tbo);
+            glUniform1i(bufs.s.tex.loc_insts, 0);
+
+            glUniform1i(bufs.s.tex.loc_inst_size, sizeof(GLinstanceData) / 16);
+
+            glActiveTexture(GL_TEXTURE1);
+            glBindTexture(GL_TEXTURE_2D, batch.tex->id);
+            glUniform1i(bufs.s.tex.loc_tex, 1);
+
+            glDrawArraysInstanced(GL_TRIANGLES, 0, 6, batch.data_size);
 
             break;
     }
@@ -317,16 +458,19 @@ void cc_gl_rendererDrawRect(f32 x, f32 y, f32 w, f32 h) {
         .x = x, .y = y, .w = w, .h = h,
         .r = r, .g = g, .b = b, .a = a
         });
-
-    /*glUseProgram(bufs.s.rect.prog);
-    glBindVertexArray(bufs.s.rect.vao);
-
-    glUniformMatrix4fv(bufs.s.rect.loc_proj, 1,0, proj2d);
-    glUniform1i(bufs.s.rect.loc_inst_size, sizeof(GLinstanceData) >> 4);
-
-    glDrawArrays(GL_TRIANGLES, 0,6);
-
-    glBindVertexArray(0);
-    glUseProgram(0);*/
 }
 
+void cc_gl_rendererDrawTexture(GLtexture* tex, f32 x, f32 y, f32 w, f32 h, f32 sx, f32 sy, f32 sw, f32 sh) {
+    if (batch.type != CC_2D_BATCH_TEXTURE) cc_gl_rendererFlush();
+    if (batch.data_size >= CC_GL_MAX_BATCH_SIZE) cc_gl_rendererFlush();
+    if (!tex) { printf("tf do you expect? you need to initialize a texture!\n"); exit(1); }
+
+    batch.type = CC_2D_BATCH_TEXTURE;
+    batch.tex = tex;
+
+    cc_gl_rendererAddInstance(&(GLinstanceData){
+        .x = x, .y = y, .w = w, .h = h,
+        .r = r, .g = g, .b = b, .a = a,
+        .sx = sx, .sy = sy, .sw = sw, .sh = sh
+        });
+}

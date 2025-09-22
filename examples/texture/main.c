@@ -3,7 +3,11 @@
 #include <xkbcommon/xkbcommon.h>
 #include <core/renderer/renderer.h>
 
-void init(void) {}
+CCtexture* tex;
+
+void init(void) {
+    tex = cc_loadTexture("examples/textures/sprite.png");
+}
 
 void update(void) {
     //printf("checking key %d\n", XKB_KEY_A);
@@ -20,10 +24,12 @@ void render(void) {
     glClear(GL_COLOR_BUFFER_BIT);
 
     cc_gl_rendererSetTint(1,0,0,1);
-    cc_gl_rendererDrawRect(0,0,64,64);
+    cc_gl_rendererDrawTexture(tex, 0,0,64,64);
 }
 
-void clean(void) {}
+void clean(void) {
+    cc_unloadTexture(tex);
+}
 
 int main(void) {
     return cc_engineMain(
@@ -33,3 +39,4 @@ int main(void) {
         render, clean
         );
 }
+

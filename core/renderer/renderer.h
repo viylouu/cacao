@@ -4,6 +4,7 @@
 // table of contents:
 //  VULKAN
 //  GL
+//      TEXTURES
 //      SHADERS
 //      MAIN
 //      FUNCS
@@ -12,6 +13,7 @@
 
 #include <core/macros/macros.h>
 #include <core/platform/platform.h>
+#include <stdlib.h>
 
 extern b8 cc_renderer_use_wayland;
 
@@ -27,6 +29,18 @@ void cc_vk_rendererDeinit(void* state);
 //
 
 void cc_gl_load(void);
+
+// TEXTURES
+typedef struct {
+    u32 id;
+    s32 width;
+    s32 height;
+} GLtexture;
+
+void cc_gl_unloadTexture(GLtexture* tex);
+GLtexture* cc_gl_loadTextureFromData(u8* data, size_t size);
+char* cc_gl_loadTextureData(const char* path, size_t* out_size);
+GLtexture* cc_gl_loadTexture(const char* path);
 
 // SHADERS
 u32 cc_gl_compileProgram(u32* shaders, u32 amount);
@@ -51,6 +65,8 @@ void cc_gl_rendererDrawRect(f32 x, f32 y, f32 w, f32 h);
 //
 // GENERAL
 //
+
+typedef void* CCtexture;
 
 void* cc_rendererInit(CCrendererApi api, const char* title);
 void cc_rendererUpdate(void* state, CCclientState* pstate);
