@@ -11,6 +11,7 @@
 
 // table of contents:
 //  TYPES
+//  TEXTURES
 //  SHADERS
 //  MAIN
 //  FUNCS
@@ -235,7 +236,7 @@ u32 cc_gl_loadProgramFromSource(const char** vert, const char** frag) {
     return program;
 }
 
-char* loadShaderSrc(const char* path) {
+char* cc_gl_loadShaderSource(const char* path) {
     FILE* file = fopen(path, "rb");
     if (!file) { 
         printf("failed to open shader at \"%s\"!\n", path); 
@@ -262,7 +263,7 @@ char* loadShaderSrc(const char* path) {
 }
 
 u32 cc_gl_loadShader(u32 type, const char* path) {
-    char* buffer = loadShaderSrc(path);
+    char* buffer = cc_gl_loadShaderSource(path);
     if (!buffer) {
         printf("failed to read shader at \"%s\"!\n", path);
         exit(1);
@@ -278,8 +279,8 @@ u32 cc_gl_loadShader(u32 type, const char* path) {
 }
 
 u32 cc_gl_loadProgram(const char* vert, const char* frag) {
-    char* vbuf = loadShaderSrc(vert);
-    char* fbuf = loadShaderSrc(frag);
+    char* vbuf = cc_gl_loadShaderSource(vert);
+    char* fbuf = cc_gl_loadShaderSource(frag);
 
     const char* vsrc = vbuf;
     const char* fsrc = fbuf;
@@ -340,7 +341,7 @@ void cc_gl_rendererInit(void) {
     bufs.s.tex.loc_inst_size = glGetUniformLocation(bufs.s.tex.prog, "inst_size");
     bufs.s.tex.loc_tex       = glGetUniformLocation(bufs.s.tex.prog, "tex");
 
-    glGenBuffers(1, &bufs.s.rect.bo);
+    glGenBuffers(1, &bufs.s.tex.bo);
     glBindBuffer(GL_TEXTURE_BUFFER, bufs.s.tex.bo);
     glBufferData(GL_TEXTURE_BUFFER, CC_GL_MAX_BUFFER_SIZE, NULL, GL_DYNAMIC_DRAW);
 

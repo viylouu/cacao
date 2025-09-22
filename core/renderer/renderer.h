@@ -46,7 +46,7 @@ GLtexture* cc_gl_loadTexture(const char* path);
 u32 cc_gl_compileProgram(u32* shaders, u32 amount);
 u32 cc_gl_loadShaderFromSource(u32 type, const char** source);
 u32 cc_gl_loadProgramFromSource(const char** vert, const char** frag);
-char* loadShaderSrc(const char* path);
+char* cc_gl_loadShaderSource(const char* path);
 u32 cc_gl_loadShader(u32 type, const char* path);
 u32 cc_gl_loadProgram(const char* vert, const char* frag);
 
