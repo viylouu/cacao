@@ -471,6 +471,6 @@ void cc_gl_rendererDrawTexture(GLtexture* tex, f32 x, f32 y, f32 w, f32 h, f32 s
     cc_gl_rendererAddInstance(&(GLinstanceData){
         .x = x, .y = y, .w = w, .h = h,
         .r = r, .g = g, .b = b, .a = a,
-        .sx = sx, .sy = sy, .sw = sw, .sh = sh
+        .sx = sx / tex->width, .sy = sy / tex->height, .sw = sw / tex->width, .sh = sh / tex->height
         });
 }

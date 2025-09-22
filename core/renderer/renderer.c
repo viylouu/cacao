@@ -30,8 +30,24 @@ void cc_rendererDeinit(void* state) {
 }
 
 void cc_rendererFlush(void* state) {
+    (void)state;
+
     switch (renderer_api) {
         case CC_API_VULKAN: return;
         case CC_API_OPENGL: return cc_gl_rendererFlush();
+    }
+}
+
+void cc_unloadTexture(CCtexture* tex) {
+    switch (renderer_api) {
+        case CC_API_VULKAN: return;
+        case CC_API_OPENGL: return cc_gl_unloadTexture((GLtexture*)tex);
+    }
+}
+
+CCtexture* cc_loadTexture(const char* path) {
+    switch (renderer_api) {
+        case CC_API_VULKAN: return NULL;
+        case CC_API_OPENGL: return (CCtexture*)cc_gl_loadTexture(path);
     }
 }

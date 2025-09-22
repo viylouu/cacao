@@ -61,16 +61,20 @@ void cc_gl_rendererSetTint(f32 red, f32 green, f32 blue, f32 alpha);
 
 //   2D
 void cc_gl_rendererDrawRect(f32 x, f32 y, f32 w, f32 h);
+void cc_gl_rendererDrawTexture(GLtexture* tex, f32 x, f32 y, f32 w, f32 h, f32 sx, f32 sy, f32 sw, f32 sh);
 
 //
 // GENERAL
 //
 
-typedef void* CCtexture;
+typedef void CCtexture;
 
 void* cc_rendererInit(CCrendererApi api, const char* title);
 void cc_rendererUpdate(void* state, CCclientState* pstate);
 void cc_rendererDeinit(void* state);
 void cc_rendererFlush(void* state);
+
+void cc_unloadTexture(CCtexture* tex);
+CCtexture* cc_loadTexture(const char* path);
 
 #endif
