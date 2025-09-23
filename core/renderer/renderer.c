@@ -41,7 +41,7 @@ void cc_rendererFlush(void* state) {
 void cc_unloadTexture(CCtexture* tex) {
     switch (renderer_api) {
         case CC_API_VULKAN: return;
-        case CC_API_OPENGL: return cc_gl_unloadTexture((GLtexture*)tex);
+        case CC_API_OPENGL: return cc_gl_unloadTexture(tex);
     }
 }
 

@@ -2,11 +2,12 @@
 #include <core/input/input.h>
 #include <xkbcommon/xkbcommon.h>
 #include <core/renderer/renderer.h>
+#include <core/types/text.h>
 
-CCtexture* tex;
+CCfont* font;
 
 void init(void) {
-    tex = cc_loadTexture("examples/texture/sprite.png");
+    font = cc_textLoadFont("data/eng/font.png");
 }
 
 void update(void) {}
@@ -17,12 +18,12 @@ void render(void) {
     glClearColor(.2,.3,.4,1);
     glClear(GL_COLOR_BUFFER_BIT);
 
-    cc_gl_rendererSetTint(1,1,1,1);
-    cc_gl_rendererDrawTexture(tex, 0,0,64,64, 0,0,tex->width, tex->height);
+    cc_gl_rendererSetTint(1,0,0,1);
+    cc_textDrawText(font, "hello world :DDD", 2, 6,7);
 }
 
 void clean(void) {
-    cc_unloadTexture(tex);
+    cc_textUnloadFont(font);
 }
 
 int main(void) {
