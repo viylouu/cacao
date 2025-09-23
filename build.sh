@@ -1,7 +1,7 @@
 mkdir -p build
 
 COMPILER=("zig" "cc")
-CFLAGS="-std=c99 -Wall -Wextra -Icocoa -I. -Iinclude -Icocoa/include"
+CFLAGS="-std=c99 -Wall -Wextra -Icacao -I. -Iinclude -Icacao/include"
 
 BUILD_TEST=false
 EXAMPLE=""
@@ -38,7 +38,7 @@ fi
 if [ -n "$EXAMPLE" ]; then
     SRC_DIRS=("." "examples/$EXAMPLE")
 else
-    SRC_DIRS=("cocoa" "src")
+    SRC_DIRS=("cacao" "src")
 fi
 
 FILES=()
