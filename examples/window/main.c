@@ -1,6 +1,4 @@
 #include <core/engine.h>
-#include <core/input/input.h>
-#include <xkbcommon/xkbcommon.h>
 #include <core/renderer/renderer.h>
 
 void init(void) {}
