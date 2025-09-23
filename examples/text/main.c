@@ -15,10 +15,9 @@ void update(void) {}
 #include <GL/gl.h>
 
 void render(void) {
-    glClearColor(.2,.3,.4,1);
-    glClear(GL_COLOR_BUFFER_BIT);
+    cc_rendererClear(.2,.3,.4,1);
 
-    cc_gl_rendererSetTint(1,1,1,1);
+    cc_rendererSetTint(1,1,1,1);
     cc_textDrawText(font, "hello world :DDD\n\nthis is a...\n...\nnewline!", 2, 6,7);
 }
 

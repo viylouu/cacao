@@ -3,6 +3,8 @@
 
 // table of contents:
 //  GENERAL
+//      FUNCS
+//          2D
 //  VULKAN
 //  GL
 //      TEXTURES
@@ -37,6 +39,14 @@ void cc_rendererFlush(void* state);
 
 void cc_unloadTexture(CCtexture* tex);
 CCtexture* cc_loadTexture(const char* path);
+
+// FUNCS
+void cc_rendererSetTint(f32 r, f32 g, f32 b, f32 a);
+void cc_rendererClear(f32 r, f32 g, f32 b, f32 a);
+
+//     2D
+void cc_rendererDrawRect(f32 x, f32 y, f32 w, f32 h);
+void cc_rendererDrawTexture(CCtexture* tex, f32 x, f32 y, f32 w, f32 h, f32 sx, f32 sy, f32 sw, f32 sh);
 
 //
 // VULKAN
@@ -77,6 +87,7 @@ void cc_gl_rendererDeinit(void);
 // FUNCS
 void cc_gl_rendererFlush(void);
 void cc_gl_rendererSetTint(f32 red, f32 green, f32 blue, f32 alpha);
+void cc_gl_rendererClear(f32 r, f32 g, f32 b, f32 a);
 
 //   2D
 void cc_gl_rendererDrawRect(f32 x, f32 y, f32 w, f32 h);

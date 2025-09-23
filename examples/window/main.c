@@ -4,23 +4,15 @@
 #include <core/renderer/renderer.h>
 
 void init(void) {}
-
-void update(void) {
-    //printf("checking key %d\n", XKB_KEY_A);
-
-    printf("%d ", (s32)(1.f/cc_delta));
-    if (cc_isKeyHeld(XKB_KEY_A))
-        printf("key a pressed\n");
-}
+void update(void) { }
 
 #include <GL/gl.h>
 
 void render(void) {
-    glClearColor(.2,.3,.4,1);
-    glClear(GL_COLOR_BUFFER_BIT);
+    cc_rendererClear(.2,.3,.4,1);
 
-    cc_gl_rendererSetTint(1,0,0,1);
-    cc_gl_rendererDrawRect(0,0,64,64);
+    cc_rendererSetTint(1,0,0,1);
+    cc_rendererDrawRect(0,0,64,64);
 }
 
 void clean(void) {}

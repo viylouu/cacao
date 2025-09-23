@@ -448,6 +448,11 @@ void cc_gl_rendererSetTint(f32 red, f32 green, f32 blue, f32 alpha) {
     a = alpha;
 }
 
+void cc_gl_rendererClear(f32 r, f32 g, f32 b, f32 a) {
+    glClearColor(r,g,b,a);
+    glClear(GL_COLOR_BUFFER_BIT);
+}
+
 
 // 2D
 void cc_gl_rendererDrawRect(f32 x, f32 y, f32 w, f32 h) {

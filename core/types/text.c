@@ -22,7 +22,7 @@ void cc_textDrawText(CCfont* font, const char* text, f32 size, f32 x, f32 y) {
         s32 sx = cur >> 4;
         s32 sy = cur & 0xF;
 
-        cc_gl_rendererDrawTexture(
+        cc_rendererDrawTexture(
             font->atlas,
             x + charX * font->charW * size,
             y + charY * font->charH * size,

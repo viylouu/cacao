@@ -51,3 +51,33 @@ CCtexture* cc_loadTexture(const char* path) {
         case CC_API_OPENGL: return (CCtexture*)cc_gl_loadTexture(path);
     }
 }
+
+// FUNCS
+void cc_rendererSetTint(f32 r, f32 g, f32 b, f32 a) {
+    switch (renderer_api) {
+        case CC_API_VULKAN: return;
+        case CC_API_OPENGL: return cc_gl_rendererSetTint(r,g,b,a);
+    }
+}
+
+void cc_rendererClear(f32 r, f32 g, f32 b, f32 a) {
+    switch (renderer_api) {
+        case CC_API_VULKAN: return;
+        case CC_API_OPENGL: return cc_gl_rendererClear(r,g,b,a);
+    }
+}
+
+//     2D
+void cc_rendererDrawRect(f32 x, f32 y, f32 w, f32 h) {
+    switch (renderer_api) {
+        case CC_API_VULKAN: return;
+        case CC_API_OPENGL: return cc_gl_rendererDrawRect(x,y,w,h);
+    }
+}
+
+void cc_rendererDrawTexture(CCtexture* tex, f32 x, f32 y, f32 w, f32 h, f32 sx, f32 sy, f32 sw, f32 sh) {
+    switch (renderer_api) {
+        case CC_API_VULKAN: return;
+        case CC_API_OPENGL: return cc_gl_rendererDrawTexture(tex, x,y,w,h,sx,sy,sw,sh);
+    }
+}
