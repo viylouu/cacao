@@ -430,7 +430,7 @@ void cc_gl_rendererFlush(void) {
             glUniform1i(bufs.s.tex.loc_inst_size, sizeof(GLinstanceData) / 16);
 
             glActiveTexture(GL_TEXTURE1);
-            glBindTexture(GL_TEXTURE_2D, ((GLtexture*)batch.tex)->id);
+            glBindTexture(GL_TEXTURE_2D, ((GLtexture*)batch.tex->platform_specific)->id);
             glUniform1i(bufs.s.tex.loc_tex, 1);
 
             glDrawArraysInstanced(GL_TRIANGLES, 0, 6, batch.data_size);
