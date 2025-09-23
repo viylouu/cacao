@@ -4,9 +4,7 @@
 #include <core/renderer/renderer.h>
 
 void init(void) {}
-void update(void) { }
-
-#include <GL/gl.h>
+void update(void) {}
 
 void render(void) {
     cc_rendererClear(.2,.3,.4,1);
