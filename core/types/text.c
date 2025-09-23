@@ -16,6 +16,7 @@ void cc_textUnloadFont(CCfont* font) {
 }
 
 void cc_textDrawText(CCfont* font, const char* text, f32 size, f32 x, f32 y) {
+    s32 charX = 0, charY = 0;
     for (s32 i = 0; text[i] != '\0'; ++i) {
         char cur = text[i];
         s32 sx = cur >> 4;
@@ -23,8 +24,8 @@ void cc_textDrawText(CCfont* font, const char* text, f32 size, f32 x, f32 y) {
 
         cc_gl_rendererDrawTexture(
             font->atlas,
-            x + i * font->charW * size,
-            y,
+            x + charX * font->charW * size,
+            y + charY * font->charH * size,
             font->charW * size,
             font->charH * size,
             sx * font->charW,
@@ -32,5 +33,11 @@ void cc_textDrawText(CCfont* font, const char* text, f32 size, f32 x, f32 y) {
             font->charW,
             font->charH
             );
+
+        ++charX;
+        if (text[i] == '\n') {
+            ++charY;
+            charX = 0;
+        }
     }
 }
