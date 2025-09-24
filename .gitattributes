@@ -3,3 +3,5 @@
 
 *.vert linguist-language=GLSL
 *.frag linguist-language=GLSL
+
+*/data/* linguist-detectable=true
