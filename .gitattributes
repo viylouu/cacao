@@ -1,2 +1,5 @@
 *.c linguist-language=C
 *.h linguist-language=C
+
+*.vert linguist-language=GLSL
+*.frag linguist-language=GLSL
