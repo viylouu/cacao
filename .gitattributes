@@ -1,7 +1,3 @@
 *.c linguist-language=C
 *.h linguist-language=C
 
-*.vert linguist-language=GLSL linguist-detectable
-*.frag linguist-language=GLSL linguist-detactable
-
-*/data/* linguist-detectable
