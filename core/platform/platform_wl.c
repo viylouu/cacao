@@ -631,7 +631,7 @@ static void wl_registryGlobal(void* client, struct wl_registry* registry, u32 na
         state->seat = wl_registry_bind(registry, name, &wl_seat_interface, 7);
         wl_seat_add_listener(state->seat, &g_wl_seat_listener, state);
     } else if (!strcmp(interface, wl_output_interface.name)) {
-        state->output = wl_registry_bind(registry, name, &wl_output_interface, 1);
+        state->output = wl_registry_bind(registry, name, &wl_output_interface, 2);
         wl_output_add_listener(state->output, &g_wl_output_listener, state);
     }
 }
