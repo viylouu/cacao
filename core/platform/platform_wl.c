@@ -554,6 +554,33 @@ static const struct wl_seat_listener g_wl_seat_listener = {
 //
 
 
+static void wl_outputGeometry(void* client, struct wl_output* output, s32 x, s32 y, s32 physwidth, s32 physheight, s32 subpixel, const char* make, const char* model, s32 transform) {
+    (void)client;
+    (void)output;
+    (void)x;
+    (void)y;
+    (void)physwidth;
+    (void)physheight;
+    (void)subpixel;
+    (void)make;
+    (void)model;
+    (void)transform;
+}
+
+static void wl_outputMode(void* client, struct wl_output* output, u32 flags, s32 width, s32 height, s32 refresh) {
+    (void)client;
+    (void)output;
+    (void)flags;
+    (void)width;
+    (void)height;
+    (void)refresh;
+}
+
+static void wl_outputDone(void* client, struct wl_output* output) {
+    (void)client;
+    (void)output;
+}
+
 static void wl_outputScale(void* client, struct wl_output* output, s32 factor) {
     (void)output;
 
@@ -561,8 +588,25 @@ static void wl_outputScale(void* client, struct wl_output* output, s32 factor) {
     state->surf_scale = factor;
 }
 
+static void wl_outputName(void* client, struct wl_output* output, const char* name) {
+    (void)client;
+    (void)output;
+    (void)name;
+}
+
+static void wl_outputDescription(void* client, struct wl_output* output, const char* description) {
+    (void)client;
+    (void)output;
+    (void)description;
+}
+
 static const struct wl_output_listener g_wl_output_listener = {
-    .scale = wl_outputScale
+    .geometry = wl_outputGeometry,
+    .mode = wl_outputMode,
+    .done = wl_outputDone,
+    .scale = wl_outputScale,
+    .name = wl_outputName,
+    .description = wl_outputDescription
 };
 
 
