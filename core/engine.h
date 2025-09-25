@@ -6,6 +6,9 @@
 extern f64 cc_time;
 extern f64 cc_delta;
 
+extern f32 cc_width;
+extern f32 cc_height;
+
 s32 cc_engineMain(
     const char* title,
     s32 width, s32 height,

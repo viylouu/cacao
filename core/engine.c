@@ -17,6 +17,9 @@
 f64 cc_time;
 f64 cc_delta;
 
+f32 cc_width;
+f32 cc_height;
+
 f64 getTime(void) {
 #ifdef _WIN32
     static LARGE_INTEGER freq = {0};
@@ -40,7 +43,7 @@ s32 cc_engineMain(
     void (*render)(void),
     void (*clean)(void)
 ) {
-    void* state = cc_platformInit(CC_API_OPENGL, title, width,height);
+    CCclientState* state = cc_platformInit(CC_API_OPENGL, title, width,height);
     void* rstate = cc_rendererInit(CC_API_OPENGL, title);
 
     init();
@@ -55,6 +58,9 @@ s32 cc_engineMain(
         cc_inputPoll();
         
         cc_rendererUpdate(rstate, state);
+
+        cc_width = state->width;
+        cc_height = state->height;
 
         update();
         render();
