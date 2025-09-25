@@ -3,7 +3,7 @@
 
 #include <core/macros/macros.h>
 
-b8 cc_collidePointRect(f32 x, f32 y, f32 rx, f32 ry, f32 rw, f32 rh) {
+static inline b8 cc_collidePointRect(f32 x, f32 y, f32 rx, f32 ry, f32 rw, f32 rh) {
     return x >= rx && y >= ry && x <= rx+rw && y <= ry+rh;
 }
 

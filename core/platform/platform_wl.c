@@ -78,6 +78,9 @@ typedef struct {
     struct wl_seat* seat;
     struct wl_keyboard* keyboard;
     struct wl_pointer* pointer;
+    struct wl_output* output;
+
+    f32 surf_scale;
     
     struct xdg_wm_base* xdg_shell;
     struct xdg_surface* xdg_surface;
@@ -294,8 +297,8 @@ static void wl_pointerFrame(void* client, struct wl_pointer* pointer) {
                 wl_fixed_to_double(event->surface_x),
                 wl_fixed_to_double(event->surface_y)
             );*/
-        cc_mouse_x = wl_fixed_to_double(event->surface_x);
-        cc_mouse_y = wl_fixed_to_double(event->surface_y);
+        cc_mouse_x = wl_fixed_to_double(event->surface_x) * state->surf_scale;
+        cc_mouse_y = wl_fixed_to_double(event->surface_y) * state->surf_scale;
     }
 
     if (event->event_mask & POINTER_EVENT_LEAVE) {
@@ -306,8 +309,8 @@ static void wl_pointerFrame(void* client, struct wl_pointer* pointer) {
         /*printf("motion %f, %f ",
                 wl_fixed_to_double(event->surface_x),
                 wl_fixed_to_double(event->surface_y));*/
-        cc_mouse_x = wl_fixed_to_double(event->surface_x);
-        cc_mouse_y = wl_fixed_to_double(event->surface_y);
+        cc_mouse_x = wl_fixed_to_double(event->surface_x) * state->surf_scale;
+        cc_mouse_y = wl_fixed_to_double(event->surface_y) * state->surf_scale;
     }
 
     if (event->event_mask & POINTER_EVENT_BUTTON) {
@@ -547,6 +550,23 @@ static const struct wl_seat_listener g_wl_seat_listener = {
 
 
 //
+// OUTPUT
+//
+
+
+static void wl_outputScale(void* client, struct wl_output* output, s32 factor) {
+    (void)output;
+
+    WLclientState* state = client;
+    state->surf_scale = factor;
+}
+
+static const struct wl_output_listener g_wl_output_listener = {
+    .scale = wl_outputScale
+};
+
+
+//
 // REGISTRY
 //
 
@@ -566,6 +586,9 @@ static void wl_registryGlobal(void* client, struct wl_registry* registry, u32 na
     } else if (!strcmp(interface, wl_seat_interface.name)) {
         state->seat = wl_registry_bind(registry, name, &wl_seat_interface, 7);
         wl_seat_add_listener(state->seat, &g_wl_seat_listener, state);
+    } else if (!strcmp(interface, wl_output_interface.name)) {
+        state->output = wl_registry_bind(registry, name, &wl_output_interface, 1);
+        wl_output_add_listener(state->output, &g_wl_output_listener, state);
     }
 }
 
