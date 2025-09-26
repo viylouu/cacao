@@ -58,6 +58,20 @@ struct {
             s32 loc_tex;
         } tex;
     } s;
+    struct {
+        struct {
+            u32 vao;
+            u32 prog;
+            u32 bo;
+            u32 tbo;
+            s32 loc_inst_size;
+            s32 loc_insts;
+            s32 loc_proj;
+            s32 loc_tex;
+            s32 loc_cam_pos;
+            s32 loc_cam_rot;
+        } model;
+    } ss;
 } bufs;
 
 b8 cc_renderer_use_wayland;
@@ -76,7 +90,10 @@ typedef struct {
     f32 x, y, w, h;
     f32 r, g, b, a;
     f32 sx,sy,sw,sh;
-    mat4 transform;
+    mat4 transform; // todo: figure out how thisll work (omfg so silly :DDDDD)
+    f32 z;
+    f32 layer;
+    f32 _pad0, _pad1;
 } GLinstanceData;
 #pragma pack()
 
