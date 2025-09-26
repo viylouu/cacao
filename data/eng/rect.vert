@@ -23,5 +23,12 @@ void main() {
     vec2 size = xywh.zw;
     col = rgba;
 
-    gl_Position = proj * vec4(vert * size + pos, 0,1);
+    mat4 transform = mat4(
+        texelFetch(insts,base+3),
+        texelFetch(insts,base+4),
+        texelFetch(insts,base+5),
+        texelFetch(insts,base+6)
+    );
+
+    gl_Position = proj * transform * vec4(vert * size + pos, 0,1);
 }

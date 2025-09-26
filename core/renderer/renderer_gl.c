@@ -61,6 +61,8 @@ b8 cc_renderer_use_wayland;
 
 mat4 proj2d;
 
+mat4 transform;
+
 f32 r,g,b,a;
 
 const s32 CC_GL_MAX_BATCH_SIZE = 65536;
@@ -71,6 +73,7 @@ typedef struct {
     f32 x, y, w, h;
     f32 r, g, b, a;
     f32 sx,sy,sw,sh;
+    mat4 transform;
 } GLinstanceData;
 #pragma pack()
 
@@ -377,6 +380,9 @@ void cc_gl_rendererDeinit(void) {
 
 
 void cc_gl_rendererAddInstance(GLinstanceData* data) {
+    memcpy(&data->r, (f32[4]){r,g,b,a}, sizeof(f32)*4);
+    memcpy(&data->transform, transform, sizeof(mat4));
+
     if (batch.data_size == batch.data_capac) {
         u32 newcapac = batch.data_capac == 0? 4 : batch.data_capac * 2;
         GLinstanceData* newdata = realloc(batch.data, newcapac * sizeof(GLinstanceData));
@@ -453,6 +459,40 @@ void cc_gl_rendererClear(f32 r, f32 g, f32 b, f32 a) {
     glClear(GL_COLOR_BUFFER_BIT);
 }
 
+void cc_gl_rendererResetTransform(void) {
+    cc_mat4_identity(&transform);
+}
+
+void cc_gl_rendererGetTransform(mat4* out) {
+    memcpy(out, &transform, sizeof(mat4));
+}
+
+void cc_gl_rendererSetTransform(mat4* matrix) {
+    memcpy(transform, matrix, sizeof(mat4));
+}
+
+void cc_gl_rendererTranslate(float x, float y, float z) {
+    mat4 a;
+    cc_mat4_translate(&a, x,y,z);
+    cc_mat4_multiply(&transform, transform, a);
+}
+
+void cc_gl_rendererScale(float x, float y, float z) {
+    mat4 a;
+    cc_mat4_scale(&a, x,y,z);
+    cc_mat4_multiply(&transform, transform, a);
+}
+
+void cc_gl_rendererRotate(float x, float y, float z) {
+    mat4 rx, ry, rz;
+    cc_mat4_rotateX(&rx, x);
+    cc_mat4_rotateY(&ry, y);
+    cc_mat4_rotateZ(&rz, z);
+    cc_mat4_multiply(&rx, rx, ry);
+    cc_mat4_multiply(&rz, rx, rz);
+    cc_mat4_multiply(&transform, transform, rz);
+}
+
 
 // 2D
 void cc_gl_rendererDrawRect(f32 x, f32 y, f32 w, f32 h) {
@@ -463,7 +503,6 @@ void cc_gl_rendererDrawRect(f32 x, f32 y, f32 w, f32 h) {
 
     cc_gl_rendererAddInstance(&(GLinstanceData){
         .x = x, .y = y, .w = w, .h = h,
-        .r = r, .g = g, .b = b, .a = a
         });
 }
 
@@ -477,7 +516,6 @@ void cc_gl_rendererDrawTexture(CCtexture* tex, f32 x, f32 y, f32 w, f32 h, f32 s
 
     cc_gl_rendererAddInstance(&(GLinstanceData){
         .x = x, .y = y, .w = w, .h = h,
-        .r = r, .g = g, .b = b, .a = a,
         .sx = sx / tex->width, .sy = sy / tex->height, .sw = sw / tex->width, .sh = sh / tex->height
         });
 }

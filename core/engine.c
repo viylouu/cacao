@@ -63,6 +63,9 @@ s32 cc_engineMain(
         cc_height = state->height;
 
         update();
+
+        cc_rendererResetTransform();
+
         render();
 
         cc_rendererFlush(rstate);

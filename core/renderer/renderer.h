@@ -17,6 +17,7 @@
 #include <core/macros/macros.h>
 #include <core/platform/platform.h>
 #include <stdlib.h>
+#include <core/types/mat4.h>
 
 extern b8 cc_renderer_use_wayland;
 
@@ -43,6 +44,13 @@ CCtexture* cc_loadTexture(const char* path);
 // FUNCS
 void cc_rendererSetTint(f32 r, f32 g, f32 b, f32 a);
 void cc_rendererClear(f32 r, f32 g, f32 b, f32 a);
+
+void cc_rendererResetTransform(void);
+void cc_rendererGetTransform(mat4* out);
+void cc_rendererSetTransform(mat4* matrix);
+void cc_rendererTranslate(float x, float y, float z);
+void cc_rendererScale(float x, float y, float z);
+void cc_rendererRotate(float x, float y, float z);
 
 //     2D
 void cc_rendererDrawRect(f32 x, f32 y, f32 w, f32 h);
@@ -88,6 +96,13 @@ void cc_gl_rendererDeinit(void);
 void cc_gl_rendererFlush(void);
 void cc_gl_rendererSetTint(f32 red, f32 green, f32 blue, f32 alpha);
 void cc_gl_rendererClear(f32 r, f32 g, f32 b, f32 a);
+
+void cc_gl_rendererResetTransform(void);
+void cc_gl_rendererGetTransform(mat4* out);
+void cc_gl_rendererSetTransform(mat4* matrix);
+void cc_gl_rendererTranslate(float x, float y, float z);
+void cc_gl_rendererScale(float x, float y, float z);
+void cc_gl_rendererRotate(float x, float y, float z);
 
 //   2D
 void cc_gl_rendererDrawRect(f32 x, f32 y, f32 w, f32 h);

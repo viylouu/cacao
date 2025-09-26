@@ -67,6 +67,48 @@ void cc_rendererClear(f32 r, f32 g, f32 b, f32 a) {
     }
 }
 
+void cc_rendererResetTransform(void) {
+    switch (renderer_api) {
+        case CC_API_VULKAN: return;
+        case CC_API_OPENGL: return cc_gl_rendererResetTransform();
+    }
+}
+
+void cc_rendererGetTransform(mat4* out) {
+    switch (renderer_api) {
+        case CC_API_VULKAN: return;
+        case CC_API_OPENGL: return cc_gl_rendererGetTransform(out);
+    }
+}
+
+void cc_rendererSetTransform(mat4* matrix) {
+    switch (renderer_api) {
+        case CC_API_VULKAN: return;
+        case CC_API_OPENGL: return cc_gl_rendererSetTransform(matrix);
+    }
+}
+
+void cc_rendererTranslate(float x, float y, float z) {
+    switch (renderer_api) {
+        case CC_API_VULKAN: return;
+        case CC_API_OPENGL: return cc_gl_rendererTranslate(x,y,z);
+    }
+}
+
+void cc_rendererScale(float x, float y, float z) {
+    switch (renderer_api) {
+        case CC_API_VULKAN: return;
+        case CC_API_OPENGL: return cc_gl_rendererScale(x,y,z);
+    }
+}
+
+void cc_rendererRotate(float x, float y, float z) {
+    switch (renderer_api) {
+        case CC_API_VULKAN: return;
+        case CC_API_OPENGL: return cc_gl_rendererRotate(x,y,z);
+    }
+}
+
 //     2D
 void cc_rendererDrawRect(f32 x, f32 y, f32 w, f32 h) {
     switch (renderer_api) {
