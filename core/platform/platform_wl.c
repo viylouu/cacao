@@ -325,7 +325,7 @@ static void wl_pointerFrame(void* client, struct wl_pointer* pointer) {
         | POINTER_EVENT_AXIS_SOURCE
         | POINTER_EVENT_AXIS_STOP
         | POINTER_EVENT_AXIS_DISCRETE;
-    char* axis_name[2] = {
+    /*char* axis_name[2] = {
         [WL_POINTER_AXIS_VERTICAL_SCROLL] = "vertical",
         [WL_POINTER_AXIS_HORIZONTAL_SCROLL] = "horizontal"
     };
@@ -334,7 +334,7 @@ static void wl_pointerFrame(void* client, struct wl_pointer* pointer) {
         [WL_POINTER_AXIS_SOURCE_FINGER] = "finger",
         [WL_POINTER_AXIS_SOURCE_CONTINUOUS] = "continuous",
         [WL_POINTER_AXIS_SOURCE_WHEEL_TILT] = "wheel tilt"
-    };
+    };*/
 
     if (event->event_mask & axis_events)
         for (size_t i = 0; i < 2; ++i) {
