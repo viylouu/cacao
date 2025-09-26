@@ -14,7 +14,7 @@ void render(void) {
 
     cc_rendererSetTint(1,1,1,1);
 
-    cc_rendererDrawSpriteStack(stack, cc_width/2, cc_height/2, 0, 8, 45*(3.14159265f/180.f));
+    cc_rendererDrawSpriteStack(stack, cc_width/2, cc_height/2, 0, 8, cc_time);
 }
 
 void clean(void) {

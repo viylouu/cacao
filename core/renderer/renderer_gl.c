@@ -576,6 +576,7 @@ void cc_gl_rendererDrawSpriteStack(CCspriteStack* stack, f32 x, f32 y, f32 z, f3
     cc_rendererGetTransform(&prev);
 
     for (f32 i = stack->layers-1; i >= 0; i -= 1.f/scale) {
+        cc_gl_rendererTranslate(-stack->texture->width * scale * .5f, -stack->layer_height * scale * .5f, 0);
         cc_gl_rendererRotate(0,0,rotation);
 
         cc_gl_rendererTranslate(x,y,0);

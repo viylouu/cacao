@@ -39,7 +39,7 @@ typedef struct {
     void* platform_specific;
     CCtexture* texture;
     u32 layers;
-    u32 layer_height;
+    s32 layer_height;
 } CCspriteStack;
 
 void* cc_rendererInit(CCrendererApi api, const char* title);

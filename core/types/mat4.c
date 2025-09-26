@@ -32,7 +32,7 @@ void cc_mat4_multiply(mat4* out, const mat4 a, const mat4 b) {
         }
     }
 
-    memcpy(*out, result, sizeof(result));
+    memcpy(*out, result, sizeof(f32)*16);
 }
 
 void cc_mat4_orthographic(
