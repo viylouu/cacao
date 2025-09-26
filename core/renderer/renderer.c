@@ -66,38 +66,13 @@ void cc_rendererResetTransform(void) { call_ts(ResetTransform); }
 void cc_rendererGetTransform(mat4* out) { call_ts(GetTransform, out); }
 void cc_rendererSetTransform(mat4* matrix) { call_ts(SetTransform, matrix); }
 
-void cc_rendererTranslate(float x, float y, float z) {
-    switch (renderer_api) {
-        case CC_API_VULKAN: return;
-        case CC_API_OPENGL: return cc_gl_rendererTranslate(x,y,z);
-    }
-}
-
-void cc_rendererScale(float x, float y, float z) {
-    switch (renderer_api) {
-        case CC_API_VULKAN: return;
-        case CC_API_OPENGL: return cc_gl_rendererScale(x,y,z);
-    }
-}
-
-void cc_rendererRotate(float x, float y, float z) {
-    switch (renderer_api) {
-        case CC_API_VULKAN: return;
-        case CC_API_OPENGL: return cc_gl_rendererRotate(x,y,z);
-    }
-}
+void cc_rendererTranslate(float x, float y, float z) { call_ts(Translate, x,y,z); }
+void cc_rendererScale(float x, float y, float z) { call_ts(Scale, x,y,z); }
+void cc_rendererRotate(float x, float y, float z) { call_ts(Rotate, x,y,z); }
 
 //     2D
-void cc_rendererDrawRect(f32 x, f32 y, f32 w, f32 h) {
-    switch (renderer_api) {
-        case CC_API_VULKAN: return;
-        case CC_API_OPENGL: return cc_gl_rendererDrawRect(x,y,w,h);
-    }
-}
+void cc_rendererDrawRect(f32 x, f32 y, f32 w, f32 h) { call_ts(DrawRect, x,y,w,h); }
+void cc_rendererDrawTexture(CCtexture* tex, f32 x, f32 y, f32 w, f32 h, f32 sx, f32 sy, f32 sw, f32 sh) { call_ts(DrawTexture,tex,x,y,w,h,sx,sy,sw,sh); }
 
-void cc_rendererDrawTexture(CCtexture* tex, f32 x, f32 y, f32 w, f32 h, f32 sx, f32 sy, f32 sw, f32 sh) {
-    switch (renderer_api) {
-        case CC_API_VULKAN: return;
-        case CC_API_OPENGL: return cc_gl_rendererDrawTexture(tex, x,y,w,h,sx,sy,sw,sh);
-    }
-}
+//     SPRITESTACK
+void cc_rendererDrawSpriteStack(CCspriteStack* stack, f32 x, f32 y, f32 z, f32 scale, f32 rotation) { call_ts(DrawSpriteStack, stack,x,y,z,scale,rotation); }
