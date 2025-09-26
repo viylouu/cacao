@@ -340,7 +340,7 @@ static void wl_pointerFrame(void* client, struct wl_pointer* pointer) {
         for (size_t i = 0; i < 2; ++i) {
             if (!event->axes[i].valid)
                 continue;
-            printf("%s axis ", axis_name[i]);
+            /*printf("%s axis ", axis_name[i]);
             if (event->event_mask & POINTER_EVENT_AXIS)
                 printf("value %f ", wl_fixed_to_double(event->axes[i].value));
             if (event->event_mask & POINTER_EVENT_AXIS_DISCRETE)
@@ -348,7 +348,7 @@ static void wl_pointerFrame(void* client, struct wl_pointer* pointer) {
             if (event->event_mask & POINTER_EVENT_AXIS_SOURCE)
                 printf("via %s ", axis_source[event->axis_source]);
             if (event->event_mask & POINTER_EVENT_AXIS_STOP)
-                printf("(stopped) ");
+                printf("(stopped) ");*/
         }
 
     //printf("\n");
