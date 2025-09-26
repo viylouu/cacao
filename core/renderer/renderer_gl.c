@@ -380,6 +380,7 @@ void cc_gl_rendererDeinit(void) {
 
 
 void cc_gl_rendererAddInstance(GLinstanceData* data) {
+    // idgaf its for the end user experience!!! (also me)
     memcpy(&data->r, (f32[4]){r,g,b,a}, sizeof(f32)*4);
     memcpy(&data->transform, transform, sizeof(mat4));
 
