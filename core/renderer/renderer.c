@@ -2,6 +2,29 @@
 
 #include <core/platform/platform.h>
 
+#define call_exp(name, ...) do { \
+    switch (renderer_api) { \
+        case CC_API_VULKAN: return NULL; \
+        case CC_API_OPENGL: return cc_gl_##name(__VA_ARGS__); \
+    } \
+} while(0)
+
+#define call_ex(name, ...) do { \
+    switch (renderer_api) { \
+        case CC_API_VULKAN: return; \
+        case CC_API_OPENGL: return cc_gl_##name(__VA_ARGS__); \
+    } \
+} while(0)
+
+
+
+// in this scenario, ts stands for "this shit" and not this, or typescript
+// it will never stand for typescript
+#define call_ts(name, ...) call_ex(renderer##name, __VA_ARGS__)
+#define call_tsp(name, ...) call_exp(renderer##name, __VA_ARGS__)
+    
+
+
 CCrendererApi renderer_api;
 
 void* cc_rendererInit(CCrendererApi api, const char* title) {
@@ -16,10 +39,7 @@ void* cc_rendererInit(CCrendererApi api, const char* title) {
 void cc_rendererUpdate(void* state, CCclientState* pstate) {
     (void)state;
 
-    switch (renderer_api) {
-        case CC_API_VULKAN: return;
-        case CC_API_OPENGL: return cc_gl_rendererUpdate(pstate->width, pstate->height);
-    }
+    call_ts(Update, pstate->width, pstate->height);
 }
 
 void cc_rendererDeinit(void* state) {
@@ -29,64 +49,22 @@ void cc_rendererDeinit(void* state) {
     }
 }
 
-void cc_rendererFlush(void* state) {
-    (void)state;
+void cc_rendererFlush(void* state) { (void)state;  call_ts(Flush); }
 
-    switch (renderer_api) {
-        case CC_API_VULKAN: return;
-        case CC_API_OPENGL: return cc_gl_rendererFlush();
-    }
-}
+void cc_unloadTexture(CCtexture* tex) {  call_ex(unloadTexture, tex); }
+CCtexture* cc_loadTexture(const char* path) { call_exp(loadTexture, path); }
 
-void cc_unloadTexture(CCtexture* tex) {
-    switch (renderer_api) {
-        case CC_API_VULKAN: return;
-        case CC_API_OPENGL: return cc_gl_unloadTexture(tex);
-    }
-}
-
-CCtexture* cc_loadTexture(const char* path) {
-    switch (renderer_api) {
-        case CC_API_VULKAN: return NULL;
-        case CC_API_OPENGL: return (CCtexture*)cc_gl_loadTexture(path);
-    }
-}
+void cc_unloadSpriteStack(CCspriteStack* stack) { call_ex(unloadSpriteStack, stack); }
+CCspriteStack* cc_loadSpriteStack(const char* path, u32 layerheight) { call_exp(loadSpriteStack, path, layerheight); }
 
 // FUNCS
-void cc_rendererSetTint(f32 r, f32 g, f32 b, f32 a) {
-    switch (renderer_api) {
-        case CC_API_VULKAN: return;
-        case CC_API_OPENGL: return cc_gl_rendererSetTint(r,g,b,a);
-    }
-}
+void cc_rendererSetTint(f32 r, f32 g, f32 b, f32 a) { call_ts(SetTint, r,g,b,a); }
 
-void cc_rendererClear(f32 r, f32 g, f32 b, f32 a) {
-    switch (renderer_api) {
-        case CC_API_VULKAN: return;
-        case CC_API_OPENGL: return cc_gl_rendererClear(r,g,b,a);
-    }
-}
+void cc_rendererClear(f32 r, f32 g, f32 b, f32 a) { call_ts(Clear, r,g,b,a); }
 
-void cc_rendererResetTransform(void) {
-    switch (renderer_api) {
-        case CC_API_VULKAN: return;
-        case CC_API_OPENGL: return cc_gl_rendererResetTransform();
-    }
-}
-
-void cc_rendererGetTransform(mat4* out) {
-    switch (renderer_api) {
-        case CC_API_VULKAN: return;
-        case CC_API_OPENGL: return cc_gl_rendererGetTransform(out);
-    }
-}
-
-void cc_rendererSetTransform(mat4* matrix) {
-    switch (renderer_api) {
-        case CC_API_VULKAN: return;
-        case CC_API_OPENGL: return cc_gl_rendererSetTransform(matrix);
-    }
-}
+void cc_rendererResetTransform(void) { call_ts(ResetTransform); }
+void cc_rendererGetTransform(mat4* out) { call_ts(GetTransform, out); }
+void cc_rendererSetTransform(mat4* matrix) { call_ts(SetTransform, matrix); }
 
 void cc_rendererTranslate(float x, float y, float z) {
     switch (renderer_api) {

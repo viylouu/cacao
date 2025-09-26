@@ -9,9 +9,11 @@
 //  GL
 //      TEXTURES
 //      SHADERS
+//      SPRITESTACKS
 //      MAIN
 //      FUNCS
 //          2D
+//          SPRITESTACK
 // 
 
 #include <core/macros/macros.h>
@@ -33,6 +35,13 @@ typedef struct {
     s32 height;
 } CCtexture;
 
+typedef struct {
+    void* platform_specific;
+    CCtexture* texture;
+    u32 layers;
+    u32 layer_height;
+} CCspriteStack;
+
 void* cc_rendererInit(CCrendererApi api, const char* title);
 void cc_rendererUpdate(void* state, CCclientState* pstate);
 void cc_rendererDeinit(void* state);
@@ -40,6 +49,9 @@ void cc_rendererFlush(void* state);
 
 void cc_unloadTexture(CCtexture* tex);
 CCtexture* cc_loadTexture(const char* path);
+
+void cc_unloadSpriteStack(CCspriteStack* stack);
+CCspriteStack* cc_loadSpriteStack(const char* path, u32 layerheight);
 
 // FUNCS
 void cc_rendererSetTint(f32 r, f32 g, f32 b, f32 a);
@@ -55,6 +67,9 @@ void cc_rendererRotate(float x, float y, float z);
 //     2D
 void cc_rendererDrawRect(f32 x, f32 y, f32 w, f32 h);
 void cc_rendererDrawTexture(CCtexture* tex, f32 x, f32 y, f32 w, f32 h, f32 sx, f32 sy, f32 sw, f32 sh);
+
+//     SPRITESTACK
+void cc_rendererDrawSpriteStack(CCspriteStack* stack, f32 x, f32 y, f32 z, f32 scale, f32 rotation);
 
 //
 // VULKAN
@@ -87,6 +102,10 @@ char* cc_gl_loadShaderSource(const char* path);
 u32 cc_gl_loadShader(u32 type, const char* path);
 u32 cc_gl_loadProgram(const char* vert, const char* frag);
 
+// SPRITESTACKS
+void cc_gl_unloadSpriteStack(CCspriteStack* stack);
+CCspriteStack* cc_gl_loadSpriteStack(const char* path, f32 layerheight);
+
 // MAIN
 void cc_gl_rendererInit(void);
 void cc_gl_rendererUpdate(s32 width, s32 height);
@@ -107,5 +126,8 @@ void cc_gl_rendererRotate(float x, float y, float z);
 //   2D
 void cc_gl_rendererDrawRect(f32 x, f32 y, f32 w, f32 h);
 void cc_gl_rendererDrawTexture(CCtexture* tex, f32 x, f32 y, f32 w, f32 h, f32 sx, f32 sy, f32 sw, f32 sh);
+
+//   SPRITESTACK
+void cc_gl_rendererDrawSpriteStack(CCspriteStack* stack, f32 x, f32 y, f32 z, f32 scale, f32 rotation);
 
 #endif

@@ -10,17 +10,19 @@
 #include <string.h>
 
 // table of contents:
-//  TYPES
+//  VARS
 //  TEXTURES
 //  SHADERS
+//  SPRITESTACKS
 //  MAIN
 //  FUNCS
 //      2D
+//      SPRITESTACK
 //
 
 
 //
-// TYPES
+// VARS
 //
 
 struct {
@@ -31,7 +33,8 @@ struct {
     //  3 - d
     //  4 - f
     //  etc.
-    //  2.5 - sg
+    //  2.5 - sg (isometric)
+    //  spritestack - ss
 
     struct {
         struct {
@@ -299,6 +302,30 @@ u32 cc_gl_loadProgram(const char* vert, const char* frag) {
 
 
 //
+// SPRITESTACKS
+//
+
+
+CCspriteStack* cc_gl_loadSpriteStack(const char* path, f32 layerheight) {
+    CCspriteStack* stack = malloc(sizeof(CCspriteStack));
+    stack->texture = cc_gl_loadTexture(path);
+    stack->layer_height = layerheight;
+    stack->layers = stack->texture->height / layerheight;
+
+    // this is incase silly vulkan needs anything (i doubt it, but... idk)
+    stack->platform_specific = malloc(sizeof(u8));
+
+    return stack;
+}
+
+void cc_gl_unloadSpriteStack(CCspriteStack* stack) {
+    cc_gl_unloadTexture(stack->texture);
+    free(stack->platform_specific);
+    free(stack);
+}
+
+
+//
 // MAIN
 //
 
@@ -519,4 +546,25 @@ void cc_gl_rendererDrawTexture(CCtexture* tex, f32 x, f32 y, f32 w, f32 h, f32 s
         .x = x, .y = y, .w = w, .h = h,
         .sx = sx / tex->width, .sy = sy / tex->height, .sw = sw / tex->width, .sh = sh / tex->height
         });
+}
+
+// SPRITESTACK
+void cc_gl_rendererDrawSpriteStack(CCspriteStack* stack, f32 x, f32 y, f32 z, f32 scale, f32 rotation) {
+    // just getting this basic ahh in here temporarily
+    // TODO: optimize ts, use depth buffers, tbos, bos, vaos, etcos.
+    
+    cc_gl_rendererScale(scale,scale,1);
+
+    mat4 prev;
+    cc_rendererGetTransform(&prev);
+
+    for (f32 i = stack->layers-1; i >= 0; i -= 1.f/scale) {
+        cc_gl_rendererRotate(0,0,rotation);
+
+        cc_gl_rendererTranslate(x,y,0);
+        cc_gl_rendererTranslate(0,(i+z)*scale,0);
+
+        cc_gl_rendererDrawTexture(stack->texture, 0,0,stack->texture->width, stack->layer_height, 0, (s32)i*stack->layer_height, stack->texture->width, stack->layer_height);
+        cc_gl_rendererSetTransform(&prev);
+    }
 }
