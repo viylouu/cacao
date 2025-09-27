@@ -3,7 +3,7 @@ mkdir -p build
 ./cacao/code_gen.sh || ./code_gen.sh
 
 COMPILER=("zig" "cc")
-CFLAGS="-std=c99 -Wall -Wextra -Icacao -I. -Iinclude -Icacao/include"
+CFLAGS="-std=c99 -Wall -Wextra -Icacao -I. -Iinclude -Icacao/include -isystem"
 
 BUILD_TEST=false
 EXAMPLE=""
@@ -26,9 +26,9 @@ if $USE_ZIG_CC && ! zig cc --version &> /dev/null; then
 fi
 
 if $BUILD_TEST; then
-    CFLAGS+=" -O0 -g"
+    CFLAGS+=" -O0 -g -fno-lto"
 else
-    CFLAGS+=" -O2 -flto"
+    CFLAGS+=" -O3 -flto"
 fi
 
 if $BUILD_WINDOWS; then
