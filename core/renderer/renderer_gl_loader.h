@@ -43,8 +43,6 @@ FUNC(glUniformMatrix4fv, void, GLint location, GLsizei count, GLboolean transpos
 FUNC(glBufferSubData, void, GLenum target, GLintptr offset, GLsizeiptr size, const void* data);
 FUNC(glUniform1i, void, GLint location, GLint v0);
 FUNC(glUniform1f, void, GLint location, GLfloat v0);
-FUNC(glUniform2f, void, GLint location, GLfloat v0, GLfloat v1);
-FUNC(glUniform4f, void, GLint location, GLfloat v0, GLfloat v1, GLfloat v2, GLfloat v3);
 FUNC(glDrawArraysInstanced, void, GLenum mode, GLint first, GLsizei count, GLsizei instancecount);
 
 #endif

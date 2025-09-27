@@ -11,6 +11,7 @@ uniform mat4 proj;
 uniform mat4 cam_rot;
 uniform mat4 cam_pos;
 uniform float cam_z;
+uniform float cam_tilt;
 
 flat out vec4 col;
 flat out vec2 samp_pos;
@@ -47,7 +48,7 @@ void main() {
     float scale = texel7.y;
     float layer = texel7.z;
 
-    vec4 vpos1 = cam_pos * cam_rot * vec4(
+    vec4 vpos1 = cam_rot * vec4(
         pos * scale,
         0,1);
 
@@ -56,10 +57,11 @@ void main() {
         0,0);
 
     vec4 vpos2 = vec4(
-        ((z + layer) * scale + cam_z) * vec2(0,1),
-        -((z + layer + cam_z) * scale * 1e5 + (vpos1.x+vpos1.y)),0);
+        ((z * vec2(0,sin(1-abs(cam_tilt))) + layer * vec2(0,sin(1-abs(cam_tilt))*1.5)) * scale + cam_z) * vec2(0,1),
+        -(z + layer + cam_z) * sign(cam_tilt) * scale * 1e5 + (vpos1.x+vpos1.y),
+        0);
 
-    vec4 glpos = proj * (vpos1 + vpos2);
+    vec4 glpos = proj * (cam_pos * (vpos1 * vec4(1,cam_tilt,1,1)) + vpos2);
 
     depth = glpos.z;
 

@@ -71,6 +71,7 @@ struct {
             s32 loc_cam_rot;
             s32 loc_cam_pos;
             s32 loc_cam_z;
+            s32 loc_cam_tilt;
         } model;
     } ss;
 } bufs;
@@ -84,6 +85,7 @@ mat4 transform;
 mat4 ss_camera_pos;
 mat4 ss_camera_rot;
 f32 ss_camera_z;
+f32 ss_camera_tilt;
 
 u32 cc_gl_renderer_draw_calls;
 
@@ -425,6 +427,7 @@ void cc_gl_rendererInit(void) {
     bufs.ss.model.loc_cam_rot   = glGetUniformLocation(bufs.ss.model.prog, "cam_rot");
     bufs.ss.model.loc_cam_pos   = glGetUniformLocation(bufs.ss.model.prog, "cam_pos");
     bufs.ss.model.loc_cam_z     = glGetUniformLocation(bufs.ss.model.prog, "cam_z");
+    bufs.ss.model.loc_cam_tilt  = glGetUniformLocation(bufs.ss.model.prog, "cam_tilt");
 
     glGenBuffers(1, &bufs.ss.model.bo);
     glBindBuffer(GL_TEXTURE_BUFFER, bufs.ss.model.bo);
@@ -538,6 +541,7 @@ void cc_gl_rendererFlush(void) {
             glUniformMatrix4fv(bufs.ss.model.loc_cam_rot, 1,0, ss_camera_rot);
             glUniformMatrix4fv(bufs.ss.model.loc_cam_pos, 1,0, ss_camera_pos);
             glUniform1f(bufs.ss.model.loc_cam_z, ss_camera_z);
+            glUniform1f(bufs.ss.model.loc_cam_tilt, ss_camera_tilt);
 
             glBindBuffer(GL_TEXTURE_BUFFER, bufs.ss.model.bo);
             glBufferSubData(GL_TEXTURE_BUFFER, 0, batch.data_size * sizeof(GLinstanceData), batch.data);
@@ -614,6 +618,7 @@ void cc_gl_rendererResetSpriteStackCamera(void) {
     cc_mat4_identity(&ss_camera_rot);
     cc_mat4_identity(&ss_camera_pos);
     ss_camera_z = 0;
+    ss_camera_tilt = 0;
 }
 
 void cc_gl_rendererTranslateSpriteStackCamera(float x, float y, float z) {
@@ -627,6 +632,10 @@ void cc_gl_rendererRotateSpriteStackCamera(float ang) {
     mat4 a;
     cc_mat4_rotateZ(&a, -ang);
     cc_mat4_multiply(&ss_camera_rot, ss_camera_rot, a);
+}
+
+void cc_gl_rendererTiltSpriteStackCamera(float tilt) {
+    ss_camera_tilt -= tilt;
 }
 
 

@@ -71,6 +71,7 @@ void cc_rendererRotate(float x, float y, float z);
 void cc_rendererResetSpriteStackCamera(void);
 void cc_rendererTranslateSpriteStackCamera(float x, float y, float z);
 void cc_rendererRotateSpriteStackCamera(float ang);
+void cc_rendererTiltSpriteStackCamera(float tilt);
 
 //     2D
 void cc_rendererDrawRect(f32 x, f32 y, f32 w, f32 h);
@@ -134,6 +135,7 @@ void cc_gl_rendererRotate(float x, float y, float z);
 void cc_gl_rendererResetSpriteStackCamera(void);
 void cc_gl_rendererTranslateSpriteStackCamera(float x, float y, float z);
 void cc_gl_rendererRotateSpriteStackCamera(float ang);
+void cc_gl_rendererTiltSpriteStackCamera(float tilt);
 
 //   2D
 void cc_gl_rendererDrawRect(f32 x, f32 y, f32 w, f32 h);
