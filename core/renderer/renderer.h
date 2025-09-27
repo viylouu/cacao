@@ -70,6 +70,7 @@ void cc_rendererRotate(float x, float y, float z);
 
 void cc_rendererResetSpriteStackCamera(void);
 void cc_rendererTranslateSpriteStackCamera(float x, float y, float z);
+void cc_rendererScaleSpriteStackCamera(float scale);
 void cc_rendererRotateSpriteStackCamera(float ang);
 void cc_rendererTiltSpriteStackCamera(float tilt);
 
@@ -78,7 +79,7 @@ void cc_rendererDrawRect(f32 x, f32 y, f32 w, f32 h);
 void cc_rendererDrawTexture(CCtexture* tex, f32 x, f32 y, f32 w, f32 h, f32 sx, f32 sy, f32 sw, f32 sh);
 
 //     SPRITESTACK
-void cc_rendererDrawSpriteStack(CCspriteStack* stack, f32 x, f32 y, f32 z, f32 scale, f32 rotation);
+void cc_rendererDrawSpriteStack(CCspriteStack* stack, f32 x, f32 y, f32 z, f32 rotation);
 
 //
 // VULKAN
@@ -134,6 +135,7 @@ void cc_gl_rendererRotate(float x, float y, float z);
 
 void cc_gl_rendererResetSpriteStackCamera(void);
 void cc_gl_rendererTranslateSpriteStackCamera(float x, float y, float z);
+void cc_gl_rendererScaleSpriteStackCamera(float scale);
 void cc_gl_rendererRotateSpriteStackCamera(float ang);
 void cc_gl_rendererTiltSpriteStackCamera(float tilt);
 
@@ -142,6 +144,6 @@ void cc_gl_rendererDrawRect(f32 x, f32 y, f32 w, f32 h);
 void cc_gl_rendererDrawTexture(CCtexture* tex, f32 x, f32 y, f32 w, f32 h, f32 sx, f32 sy, f32 sw, f32 sh);
 
 //   SPRITESTACK
-void cc_gl_rendererDrawSpriteStack(CCspriteStack* stack, f32 x, f32 y, f32 z, f32 scale, f32 rotation);
+void cc_gl_rendererDrawSpriteStack(CCspriteStack* stack, f32 x, f32 y, f32 z, f32 rotation);
 
 #endif

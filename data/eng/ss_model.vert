@@ -12,6 +12,7 @@ uniform mat4 cam_rot;
 uniform mat4 cam_pos;
 uniform float cam_z;
 uniform float cam_tilt;
+uniform float cam_scale;
 
 flat out vec4 col;
 flat out vec2 samp_pos;
@@ -31,8 +32,6 @@ void main() {
     vec2 pos = xywh.xy;
     vec2 size = xywh.zw;
     col = rgba;
-    samp_pos = sxywh.xy;
-    samp_size = sxywh.zw;
 
     uv = vert;
 
@@ -43,22 +42,28 @@ void main() {
         texelFetch(insts,base+6)
     );
 
-    vec4 texel7 = texelFetch(insts,base+7);
+    vec4 texel7 = texelFetch(insts,base+2);
     float z = texel7.x;
-    float scale = texel7.y;
-    float layer = texel7.z;
+    float layer = texel7.y;
+    vec2 tex_size = texel7.zw;
+    
+    samp_pos = vec2(
+            0,
+            floor(layer)*(size.y/tex_size.y)
+        );
+    samp_size = size/tex_size;
 
     vec4 vpos1 = cam_rot * vec4(
-        pos * scale,
+        pos * cam_scale,
         0,1);
 
     vpos1 += cam_rot * rotation * vec4(
-        (vert - .5f) * size * scale, 
+        (vert - .5f) * size * cam_scale, 
         0,0);
 
     vec4 vpos2 = vec4(
-        ((z * vec2(0,sin(1-abs(cam_tilt))) + layer * vec2(0,sin(1-abs(cam_tilt))*1.5)) * scale + cam_z) * vec2(0,1),
-        -(z + layer + cam_z) * sign(cam_tilt) * scale * 1e5 + (vpos1.x+vpos1.y),
+        ((z * vec2(0,sin(1-abs(cam_tilt))) + layer * vec2(0,sin(1-abs(cam_tilt))*1.5)) * cam_scale + cam_z) * vec2(0,1),
+        -(z + layer + cam_z) * sign(cam_tilt) * cam_scale * 1e5 + (vpos1.x+vpos1.y),
         0);
 
     vec4 glpos = proj * (cam_pos * (vpos1 * vec4(1,cam_tilt,1,1)) + vpos2);

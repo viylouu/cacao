@@ -72,6 +72,7 @@ struct {
             s32 loc_cam_pos;
             s32 loc_cam_z;
             s32 loc_cam_tilt;
+            s32 loc_cam_scale;
         } model;
     } ss;
 } bufs;
@@ -86,6 +87,7 @@ mat4 ss_camera_pos;
 mat4 ss_camera_rot;
 f32 ss_camera_z;
 f32 ss_camera_tilt;
+f32 ss_camera_scale;
 
 u32 cc_gl_renderer_draw_calls;
 
@@ -98,12 +100,8 @@ s32 CC_GL_MAX_BUFFER_SIZE;
 typedef struct {
     f32 x, y, w, h;
     f32 r, g, b, a;
-    f32 sx,sy,sw,sh; //sw sh could (possibly) have z and scale substituted, but that would mean layer would have space for 3 other paddings
+    f32 sx,sy,sw,sh; // in ss mode, this is z, layer, tex width, tex height
     mat4 transform; // in ss mode, this is rotate
-    f32 z;
-    f32 scale;
-    f32 layer;
-    f32 _pad0;
     //mat4 rotate;
 } GLinstanceData;
 #pragma pack()
@@ -428,6 +426,8 @@ void cc_gl_rendererInit(void) {
     bufs.ss.model.loc_cam_pos   = glGetUniformLocation(bufs.ss.model.prog, "cam_pos");
     bufs.ss.model.loc_cam_z     = glGetUniformLocation(bufs.ss.model.prog, "cam_z");
     bufs.ss.model.loc_cam_tilt  = glGetUniformLocation(bufs.ss.model.prog, "cam_tilt");
+    bufs.ss.model.loc_cam_scale = glGetUniformLocation(bufs.ss.model.prog, "cam_scale");
+    //bufs.ss.model.loc_tex_size  = glGetUniformLocation(bufs.ss.model.prog, "tex_size");
 
     glGenBuffers(1, &bufs.ss.model.bo);
     glBindBuffer(GL_TEXTURE_BUFFER, bufs.ss.model.bo);
@@ -543,6 +543,8 @@ void cc_gl_rendererFlush(void) {
             glUniformMatrix4fv(bufs.ss.model.loc_cam_pos, 1,0, ss_camera_pos);
             glUniform1f(bufs.ss.model.loc_cam_z, ss_camera_z);
             glUniform1f(bufs.ss.model.loc_cam_tilt, ss_camera_tilt);
+            glUniform1f(bufs.ss.model.loc_cam_scale, ss_camera_scale);
+            //glUniform2f(bufs.ss.model.loc_tex_size, batch.tex->width, batch.tex->height);
 
             glBindBuffer(GL_TEXTURE_BUFFER, bufs.ss.model.bo);
             glBufferSubData(GL_TEXTURE_BUFFER, 0, batch.data_size * sizeof(GLinstanceData), batch.data);
@@ -620,6 +622,7 @@ void cc_gl_rendererResetSpriteStackCamera(void) {
     cc_mat4_identity(&ss_camera_pos);
     ss_camera_z = 0;
     ss_camera_tilt = 0;
+    ss_camera_scale = 1;
 }
 
 void cc_gl_rendererTranslateSpriteStackCamera(float x, float y, float z) {
@@ -627,6 +630,10 @@ void cc_gl_rendererTranslateSpriteStackCamera(float x, float y, float z) {
     cc_mat4_translate(&a, x,y,0);
     cc_mat4_multiply(&ss_camera_pos, ss_camera_pos, a);
     ss_camera_z += z;
+}
+
+void cc_gl_rendererScaleSpriteStackCamera(float scale) {
+    ss_camera_scale *= scale;
 }
 
 void cc_gl_rendererRotateSpriteStackCamera(float ang) {
@@ -668,9 +675,9 @@ void cc_gl_rendererDrawTexture(CCtexture* tex, f32 x, f32 y, f32 w, f32 h, f32 s
 }
 
 // SPRITESTACK
-void cc_gl_rendererDrawSpriteStack(CCspriteStack* stack, f32 x, f32 y, f32 z, f32 scale, f32 rotation) {
+void cc_gl_rendererDrawSpriteStack(CCspriteStack* stack, f32 x, f32 y, f32 z, f32 rotation) {
     if (batch.type != CC_SPRITESTACK_BATCH_MODEL) cc_gl_rendererFlush();
-    if (batch.data_size + stack->layers*scale >= CC_GL_MAX_BATCH_SIZE) cc_gl_rendererFlush();
+    if (batch.data_size + stack->layers*ss_camera_scale >= CC_GL_MAX_BATCH_SIZE) cc_gl_rendererFlush();
     if (!stack->texture) { printf("get a texture, bitch.\n"); exit(1); }
     if (batch.tex != stack->texture) cc_gl_rendererFlush();
 
@@ -680,13 +687,14 @@ void cc_gl_rendererDrawSpriteStack(CCspriteStack* stack, f32 x, f32 y, f32 z, f3
     mat4 rot;
     cc_mat4_rotateZ(&rot, -rotation);
 
-    for (f32 i = 0; i < stack->layers; i += 1.f/scale) {
+    for (f32 i = 0; i < stack->layers; i += 1.f/ss_camera_scale) {
         GLinstanceData data = {
             .x = x, .y = y, .w = stack->texture->width, .h = stack->layer_height,
-            .sx = 0, .sy = (f32)(stack->layer_height*(s32)i) / stack->texture->height, .sw = 1, .sh = (f32)stack->layer_height / stack->texture->height,
-            .z = z,
-            .scale = scale,
-            .layer = i
+            //.sx = 0, .sy = (f32)(stack->layer_height*(s32)i) / stack->texture->height, .sw = 1, .sh = (f32)stack->layer_height / stack->texture->height,
+            .sx = z,
+            .sy = i,
+            .sw = stack->texture->width,
+            .sh = stack->texture->height
         };
 
         //memcpy(data.rotate, rot, sizeof(mat4));
