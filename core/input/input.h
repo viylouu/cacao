@@ -34,4 +34,9 @@ static inline b8 cc_isKeyPressed(u32 key) { return cc_keyboard_keys[key] == CC_S
 static inline b8 cc_isKeyHeld(u32 key) { return cc_keyboard_keys[key] == CC_STATE_HELD || cc_keyboard_keys[key] == CC_STATE_PRESSED; }
 static inline b8 cc_isKeyReleased(u32 key) { return cc_keyboard_keys[key] == CC_STATE_RELEASED; }
 
+
+static inline b8 cc_isMousePressed(u32 key) { return cc_mouse_buttons[key] == CC_STATE_PRESSED; }
+static inline b8 cc_isMouseHeld(u32 key) { return cc_mouse_buttons[key] == CC_STATE_HELD || cc_mouse_buttons[key] == CC_STATE_PRESSED; }
+static inline b8 cc_isMouseReleased(u32 key) { return cc_mouse_buttons[key] == CC_STATE_RELEASED; }
+
 #endif
