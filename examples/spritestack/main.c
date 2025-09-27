@@ -25,12 +25,12 @@ void render(void) {
 
     cc_rendererSetTint(1,1,1,1);
 
-    s32 size = 6;
+    s32 size = 24;
 
     for (s32 x = -size; x < size; ++x)
         for (s32 y = -size; y < size; ++y)
             for (s32 z = -size; z < size; ++z)
-                cc_rendererDrawSpriteStack(stack, x*16, y*16, z*16, 2, 0);
+                cc_rendererDrawSpriteStack(stack, x*16, y*16, z*16, 1, 0);
 
     cc_textDrawText(font, buf, 3, 8,8);
 }

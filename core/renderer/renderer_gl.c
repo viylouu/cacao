@@ -87,7 +87,7 @@ f32 ss_camera_z;
 
 f32 r,g,b,a;
 
-const s32 CC_GL_MAX_BATCH_SIZE = 4096;
+const s32 CC_GL_MAX_BATCH_SIZE = 8192;
 s32 CC_GL_MAX_BUFFER_SIZE;
 
 #pragma pack(4)
