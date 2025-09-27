@@ -19,6 +19,7 @@
 
 #include "platform.h"
 #include <core/input/input.h>
+#include <core/renderer/renderer.h>
 
 #include <stdio.h>
 #include <string.h>
@@ -158,6 +159,7 @@ static void xdg_toplevelConfigure(void* client, struct xdg_toplevel* toplevel, s
         case CC_API_OPENGL:
             wl_egl_window_resize(state->egl.window, width, height, 0,0);
             glViewport(0,0, width, height);
+            cc_gl_rendererUpdate(width, height);
             break;
     }
 }
@@ -354,7 +356,7 @@ static void wl_pointerFrame(void* client, struct wl_pointer* pointer) {
     //printf("\n");
     memset(event, 0, sizeof(*event));
 
-    printf("%f\n",wl_fixed_to_double(state->pointer_event.surface_x));
+    //printf("%f\n",wl_fixed_to_double(state->pointer_event.surface_x));
 }
 
 static const struct wl_pointer_listener g_wl_pointer_listener = {
