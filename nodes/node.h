@@ -15,6 +15,9 @@ typedef struct {
 
 typedef struct CCnode CCnode;
 struct CCnode {
+    char* name;
+    b8 open; // for editor
+
     CCcomponent* components;
     u32 component_amt;
     u32 component_capac;

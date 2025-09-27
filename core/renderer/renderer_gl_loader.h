@@ -45,4 +45,16 @@ FUNC(glUniform1i, void, GLint location, GLint v0);
 FUNC(glUniform1f, void, GLint location, GLfloat v0);
 FUNC(glDrawArraysInstanced, void, GLenum mode, GLint first, GLsizei count, GLsizei instancecount);
 
+FUNC(glGenFramebuffers, void, GLsizei n, GLuint* framebuffers);
+FUNC(glBindFramebuffer, void, GLenum target, GLuint framebuffer);
+FUNC(glFramebufferTexture2D, void, GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level);
+FUNC(glCheckFramebufferStatus, GLenum, GLenum target);
+FUNC(glDeleteFramebuffers, void, GLsizei n, GLuint* framebuffers);
+
+FUNC(glGenRenderbuffers, void, GLsizei n, GLuint* renderbuffers);
+FUNC(glBindRenderbuffer, void, GLenum target, GLuint renderbuffer);
+FUNC(glRenderbufferStorage, void, GLenum target, GLenum internalformat, GLsizei width, GLsizei height);
+FUNC(glFramebufferRenderbuffer, void, GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer);
+FUNC(glDeleteRenderbuffers, void, GLsizei n, const GLuint* renderbuffers);
+
 #endif

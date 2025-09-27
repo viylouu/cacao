@@ -1,5 +1,6 @@
 #include <core/engine.h>
 #include <core/renderer/renderer.h>
+#include <core/input/input.h>
 #include <core/types/text.h>
 #include <stdio.h>
 #include <math.h>
@@ -20,9 +21,9 @@ void render(void) {
     char buf[1024];
     sprintf(buf, "almighty minecraft car cube item\n%4.2f FPS", 1.f/cc_delta);
 
-    cc_rendererRotateSpriteStackCamera(-cc_time);
+    cc_rendererRotateSpriteStackCamera(-cc_mouse_x/cc_real_width*3.14159256f*2);
     cc_rendererTranslateSpriteStackCamera(cc_width/2, cc_height/2, /*sin(cc_time*2)*128*/0);
-    cc_rendererTiltSpriteStackCamera(sin(cc_time*.5f));
+    cc_rendererTiltSpriteStackCamera((cc_mouse_y/cc_real_height-.5f)*-2);
 
     cc_rendererSetTint(1,1,1,1);
 
@@ -31,11 +32,9 @@ void render(void) {
     for (s32 x = -size; x < size; ++x)
         for (s32 y = -size; y < size; ++y)
             for (s32 z = -size; z < size; ++z)
-                cc_rendererDrawSpriteStack(stack, x*16, y*16, z*16, 8, 0);
+                cc_rendererDrawSpriteStack(stack, x*16, y*16, z*16, 2, 0);
 
-    cc_textDrawText(font, buf, 3, 8,8);
-
-    printf("%d draw calls\n", cc_renderer_draw_calls + 1);
+    cc_textDrawText(font, buf, 1, 2,2);
 }
 
 void clean(void) {
@@ -46,7 +45,7 @@ void clean(void) {
 int main(void) {
     return cc_engineMain(
         "MAIN",
-        800, 600,
+        480, 270,
         init, update,
         render, clean
         );

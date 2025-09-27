@@ -63,6 +63,18 @@ FUNC_C(glUniform1i, void, GLint location, GLint v0);
 FUNC_C(glUniform1f, void, GLint location, GLfloat v0);
 FUNC_C(glDrawArraysInstanced, void, GLenum mode, GLint first, GLsizei count, GLsizei instancecount);
 
+FUNC_C(glGenFramebuffers, void, GLsizei n, GLuint* framebuffers);
+FUNC_C(glBindFramebuffer, void, GLenum target, GLuint framebuffer);
+FUNC_C(glFramebufferTexture2D, void, GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level);
+FUNC_C(glCheckFramebufferStatus, GLenum, GLenum target);
+FUNC_C(glDeleteFramebuffers, void, GLsizei n, GLuint* framebuffers);
+
+FUNC_C(glGenRenderbuffers, void, GLsizei n, GLuint* renderbuffers);
+FUNC_C(glBindRenderbuffer, void, GLenum target, GLuint renderbuffer);
+FUNC_C(glRenderbufferStorage, void, GLenum target, GLenum internalformat, GLsizei width, GLsizei height);
+FUNC_C(glFramebufferRenderbuffer, void, GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer);
+FUNC_C(glDeleteRenderbuffers, void, GLsizei n, const GLuint* renderbuffers);
+
 void cc_gl_load(void) {
 
 LOAD(glCreateShader);
@@ -96,4 +108,16 @@ LOAD(glBufferSubData);
 LOAD(glUniform1i);
 LOAD(glUniform1f);
 LOAD(glDrawArraysInstanced);
+
+LOAD(glGenFramebuffers);
+LOAD(glBindFramebuffer);
+LOAD(glFramebufferTexture2D);
+LOAD(glCheckFramebufferStatus);
+LOAD(glDeleteFramebuffers);
+
+LOAD(glGenRenderbuffers);
+LOAD(glBindRenderbuffer);
+LOAD(glRenderbufferStorage);
+LOAD(glFramebufferRenderbuffer);
+LOAD(glDeleteRenderbuffers);
 }

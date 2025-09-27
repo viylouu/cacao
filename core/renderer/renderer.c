@@ -38,7 +38,7 @@ void* cc_rendererInit(CCrendererApi api, const char* title) {
     }
 }
 
-void cc_rendererUpdate(void* state, CCclientState* pstate) {
+void cc_rendererUpdate(void* state, f32 width, f32 height) {
     (void)state;
 
     if (cc_gl_renderer_draw_calls != 0)
@@ -49,7 +49,7 @@ void cc_rendererUpdate(void* state, CCclientState* pstate) {
     cc_gl_renderer_draw_calls = 0;
     cc_vk_renderer_draw_calls = 0;
 
-    call_ts(Update, pstate->width, pstate->height);
+    call_ts(Update, width, height);
 }
 
 void cc_rendererDeinit(void* state) {

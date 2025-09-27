@@ -29,3 +29,15 @@ glBufferSubData, void, GLenum target, GLintptr offset, GLsizeiptr size, const vo
 glUniform1i, void, GLint location, GLint v0
 glUniform1f, void, GLint location, GLfloat v0
 glDrawArraysInstanced, void, GLenum mode, GLint first, GLsizei count, GLsizei instancecount
+
+glGenFramebuffers, void, GLsizei n, GLuint* framebuffers
+glBindFramebuffer, void, GLenum target, GLuint framebuffer
+glFramebufferTexture2D, void, GLenum target, GLenum attachment, GLenum textarget, GLuint texture, GLint level
+glCheckFramebufferStatus, GLenum, GLenum target
+glDeleteFramebuffers, void, GLsizei n, GLuint* framebuffers
+
+glGenRenderbuffers, void, GLsizei n, GLuint* renderbuffers
+glBindRenderbuffer, void, GLenum target, GLuint renderbuffer
+glRenderbufferStorage, void, GLenum target, GLenum internalformat, GLsizei width, GLsizei height
+glFramebufferRenderbuffer, void, GLenum target, GLenum attachment, GLenum renderbuffertarget, GLuint renderbuffer
+glDeleteRenderbuffers, void, GLsizei n, const GLuint* renderbuffers

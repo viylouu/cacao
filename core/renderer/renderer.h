@@ -47,7 +47,7 @@ typedef struct {
 } CCspriteStack;
 
 void* cc_rendererInit(CCrendererApi api, const char* title);
-void cc_rendererUpdate(void* state, CCclientState* pstate);
+void cc_rendererUpdate(void* state, f32 width, f32 height);
 void cc_rendererDeinit(void* state);
 void cc_rendererFlush(void* state);
 

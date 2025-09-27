@@ -6,6 +6,8 @@
 extern f64 cc_time;
 extern f64 cc_delta;
 
+extern f32 cc_real_width;
+extern f32 cc_real_height;
 extern f32 cc_width;
 extern f32 cc_height;
 
