@@ -440,6 +440,7 @@ void cc_gl_rendererInit(void) {
 
 void cc_gl_rendererUpdate(s32 width, s32 height) {
     cc_mat4_orthographic(&proj2d, 0,width,height,0, -2147483647.f,2147483647.f);
+    glViewport(0,0,width,height);
 }
 
 void cc_gl_rendererDeinit(void) {
