@@ -4,6 +4,8 @@
 #include <stdlib.h>
 #include <stdio.h>
 
+u32 cc_vk_renderer_draw_calls;
+
 typedef struct {
     VkInstance instance;
 } VKrendererState;

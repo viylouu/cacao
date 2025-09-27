@@ -27,6 +27,8 @@
 
 CCrendererApi renderer_api;
 
+u32 cc_renderer_draw_calls;
+
 void* cc_rendererInit(CCrendererApi api, const char* title) {
     renderer_api = api;
 
@@ -38,6 +40,14 @@ void* cc_rendererInit(CCrendererApi api, const char* title) {
 
 void cc_rendererUpdate(void* state, CCclientState* pstate) {
     (void)state;
+
+    if (cc_gl_renderer_draw_calls != 0)
+        cc_renderer_draw_calls = cc_gl_renderer_draw_calls;
+    else
+        cc_renderer_draw_calls = cc_vk_renderer_draw_calls;
+
+    cc_gl_renderer_draw_calls = 0;
+    cc_vk_renderer_draw_calls = 0;
 
     call_ts(Update, pstate->width, pstate->height);
 }

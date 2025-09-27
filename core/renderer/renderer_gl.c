@@ -85,6 +85,8 @@ mat4 ss_camera_pos;
 mat4 ss_camera_rot;
 f32 ss_camera_z;
 
+u32 cc_gl_renderer_draw_calls;
+
 f32 r,g,b,a;
 
 const s32 CC_GL_MAX_BATCH_SIZE = 8192;
@@ -558,6 +560,8 @@ void cc_gl_rendererFlush(void) {
     }
 
     batch.data_size = 0;
+
+    ++cc_gl_renderer_draw_calls;
 }
 
 void cc_gl_rendererSetTint(f32 red, f32 green, f32 blue, f32 alpha) {

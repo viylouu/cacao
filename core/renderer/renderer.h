@@ -29,6 +29,10 @@ extern b8 cc_renderer_use_wayland;
 // GENERAL
 //
 
+extern u32 cc_renderer_draw_calls;
+extern u32 cc_gl_renderer_draw_calls;
+extern u32 cc_vk_renderer_draw_calls;
+
 typedef struct {
     void* platform_specific;
     s32 width;

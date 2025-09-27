@@ -33,6 +33,8 @@ void render(void) {
                 cc_rendererDrawSpriteStack(stack, x*16, y*16, z*16, 1, 0);
 
     cc_textDrawText(font, buf, 3, 8,8);
+
+    printf("%d draw calls\n", cc_renderer_draw_calls + 1);
 }
 
 void clean(void) {
