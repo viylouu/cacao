@@ -779,7 +779,7 @@ void* cc_wl_platformInit(CCrendererApi api, const char* title, s32 targwidth, s3
     switch (api) {
         case CC_API_VULKAN: break;
         case CC_API_OPENGL:
-             wl_egl_window_resize(state->egl.window, state->cc.width, state->cc.height, 0,0);
+            wl_egl_window_resize(state->egl.window, state->cc.width, state->cc.height, 0,0);
             break;
     }
 
