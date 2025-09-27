@@ -20,13 +20,19 @@ void render(void) {
     char buf[32];
     sprintf(buf, "%4.2f FPS", 1.f/cc_delta);
 
-    cc_rendererSetTint(1,1,1,1);
-    cc_textDrawText(font, buf, 3, 0,0);
+    cc_rendererRotateSpriteStackCamera(-cc_time);
+    cc_rendererTranslateSpriteStackCamera(cc_width/2, cc_height/2, 0);
 
-    for (s32 x = -8; x < 8; ++x)
-        for (s32 y = -8; y < 8; ++y)
-            for (s32 z = -8; z < 8; ++z)
-                cc_rendererDrawSpriteStack(stack, cc_width/2/2 + x*16 + z*8, cc_height/2/2 + y*16, z*16, 2, cc_time);
+    cc_rendererSetTint(1,1,1,1);
+
+    s32 size = 12;
+
+    for (s32 x = -size; x < size; ++x)
+        for (s32 y = -size; y < size; ++y)
+            for (s32 z = -size; z < size; ++z)
+                cc_rendererDrawSpriteStack(stack, x*16, y*16, z*16, 2, cc_time);
+
+    cc_textDrawText(font, buf, 3, 0,0);
 }
 
 void clean(void) {

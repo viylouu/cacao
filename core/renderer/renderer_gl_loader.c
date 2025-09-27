@@ -55,6 +55,7 @@ FUNC_C(glBindVertexArray, void, GLuint array);
 FUNC_C(glUniformMatrix4fv, void, GLint location, GLsizei count, GLboolean transpose, const GLfloat* value);
 FUNC_C(glBufferSubData, void, GLenum target, GLintptr offset, GLsizeiptr size, const void* data);
 FUNC_C(glUniform1i, void, GLint location, GLint v0);
+FUNC_C(glUniform1f, void, GLint location, GLfloat v0);
 FUNC_C(glUniform2f, void, GLint location, GLfloat v0, GLfloat v1);
 FUNC_C(glUniform4f, void, GLint location, GLfloat v0, GLfloat v1, GLfloat v2, GLfloat v3);
 FUNC_C(glDrawArraysInstanced, void, GLenum mode, GLint first, GLsizei count, GLsizei instancecount);
@@ -89,6 +90,7 @@ void cc_gl_load(void) {
     LOAD(glUniformMatrix4fv);
     LOAD(glBufferSubData);
     LOAD(glUniform1i);
+    LOAD(glUniform1f);
     LOAD(glUniform2f);
     LOAD(glUniform4f);
     LOAD(glDrawArraysInstanced);

@@ -70,6 +70,11 @@ void cc_rendererTranslate(float x, float y, float z) { call_ts(Translate, x,y,z)
 void cc_rendererScale(float x, float y, float z) { call_ts(Scale, x,y,z); }
 void cc_rendererRotate(float x, float y, float z) { call_ts(Rotate, x,y,z); }
 
+
+void cc_rendererResetSpriteStackCamera(void) { call_ts(ResetSpriteStackCamera); }
+void cc_rendererTranslateSpriteStackCamera(float x, float y, float z) { call_ts(TranslateSpriteStackCamera, x,y,z); }
+void cc_rendererRotateSpriteStackCamera(float ang) { call_ts(RotateSpriteStackCamera, ang); }
+
 //     2D
 void cc_rendererDrawRect(f32 x, f32 y, f32 w, f32 h) { call_ts(DrawRect, x,y,w,h); }
 void cc_rendererDrawTexture(CCtexture* tex, f32 x, f32 y, f32 w, f32 h, f32 sx, f32 sy, f32 sw, f32 sh) { call_ts(DrawTexture,tex,x,y,w,h,sx,sy,sw,sh); }

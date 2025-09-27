@@ -64,6 +64,10 @@ void cc_rendererTranslate(float x, float y, float z);
 void cc_rendererScale(float x, float y, float z);
 void cc_rendererRotate(float x, float y, float z);
 
+void cc_rendererResetSpriteStackCamera(void);
+void cc_rendererTranslateSpriteStackCamera(float x, float y, float z);
+void cc_rendererRotateSpriteStackCamera(float ang);
+
 //     2D
 void cc_rendererDrawRect(f32 x, f32 y, f32 w, f32 h);
 void cc_rendererDrawTexture(CCtexture* tex, f32 x, f32 y, f32 w, f32 h, f32 sx, f32 sy, f32 sw, f32 sh);
@@ -122,6 +126,10 @@ void cc_gl_rendererSetTransform(mat4* matrix);
 void cc_gl_rendererTranslate(float x, float y, float z);
 void cc_gl_rendererScale(float x, float y, float z);
 void cc_gl_rendererRotate(float x, float y, float z);
+
+void cc_gl_rendererResetSpriteStackCamera(void);
+void cc_gl_rendererTranslateSpriteStackCamera(float x, float y, float z);
+void cc_gl_rendererRotateSpriteStackCamera(float ang);
 
 //   2D
 void cc_gl_rendererDrawRect(f32 x, f32 y, f32 w, f32 h);

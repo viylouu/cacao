@@ -65,6 +65,7 @@ s32 cc_engineMain(
         update();
 
         cc_rendererResetTransform();
+        cc_rendererResetSpriteStackCamera();
 
         render();
 

@@ -69,6 +69,8 @@ struct {
             s32 loc_proj;
             s32 loc_tex;
             s32 loc_cam;
+            s32 loc_cam_z;
+            s32 loc_cam_ang;
         } model;
     } ss;
 } bufs;
@@ -78,6 +80,10 @@ b8 cc_renderer_use_wayland;
 mat4 proj2d;
 
 mat4 transform;
+
+mat4 ss_camera;
+f32 ss_camera_z;
+f32 ss_camera_ang;
 
 f32 r,g,b,a;
 
@@ -362,6 +368,9 @@ void cc_gl_rendererInit(void) {
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
 
+    glDepthMask(GL_TRUE);
+    glDepthFunc(GL_LEQUAL);;
+
     //
     // 2D
     //
@@ -412,6 +421,8 @@ void cc_gl_rendererInit(void) {
     bufs.ss.model.loc_inst_size = glGetUniformLocation(bufs.ss.model.prog, "inst_size");
     bufs.ss.model.loc_tex       = glGetUniformLocation(bufs.ss.model.prog, "tex");
     bufs.ss.model.loc_cam       = glGetUniformLocation(bufs.ss.model.prog, "cam");
+    bufs.ss.model.loc_cam_z     = glGetUniformLocation(bufs.ss.model.prog, "cam_z");
+    bufs.ss.model.loc_cam_ang   = glGetUniformLocation(bufs.ss.model.prog, "cam_ang");
 
     glGenBuffers(1, &bufs.ss.model.bo);
     glBindBuffer(GL_TEXTURE_BUFFER, bufs.ss.model.bo);
@@ -423,7 +434,7 @@ void cc_gl_rendererInit(void) {
 }
 
 void cc_gl_rendererUpdate(s32 width, s32 height) {
-    cc_mat4_orthographic(&proj2d, 0,width,height,0, -65536,65536);
+    cc_mat4_orthographic(&proj2d, 0,width,height,0, -2147483647.f,2147483647.f);
 }
 
 void cc_gl_rendererDeinit(void) {
@@ -516,12 +527,15 @@ void cc_gl_rendererFlush(void) {
 
             break;
         case CC_SPRITESTACK_BATCH_MODEL:
-            glEnable(GL_DEPTH);
+            glEnable(GL_DEPTH_TEST);
 
             glUseProgram(bufs.ss.model.prog);
             glBindVertexArray(bufs.ss.model.vao);
 
             glUniformMatrix4fv(bufs.ss.model.loc_proj, 1,0, proj2d);
+            glUniformMatrix4fv(bufs.ss.model.loc_cam, 1,0, ss_camera);
+            glUniform1f(bufs.ss.model.loc_cam_z, ss_camera_z);
+            glUniform1f(bufs.ss.model.loc_cam_ang, ss_camera_ang);
 
             glBindBuffer(GL_TEXTURE_BUFFER, bufs.ss.model.bo);
             glBufferSubData(GL_TEXTURE_BUFFER, 0, batch.data_size * sizeof(GLinstanceData), batch.data);
@@ -538,7 +552,7 @@ void cc_gl_rendererFlush(void) {
 
             glDrawArraysInstanced(GL_TRIANGLES, 0, 6, batch.data_size);
 
-            glDisable(GL_DEPTH);
+            glDisable(GL_DEPTH_TEST);
 
             break;
     }
@@ -592,6 +606,26 @@ void cc_gl_rendererRotate(float x, float y, float z) {
     cc_mat4_multiply(&transform, transform, rz);
 }
 
+void cc_gl_rendererResetSpriteStackCamera(void) {
+    cc_mat4_identity(&ss_camera);
+    ss_camera_z = 0;
+    ss_camera_ang = 0;
+}
+
+void cc_gl_rendererTranslateSpriteStackCamera(float x, float y, float z) {
+    mat4 a;
+    cc_mat4_translate(&a, x,y,0);
+    cc_mat4_multiply(&ss_camera, ss_camera, a);
+    ss_camera_z -= z;
+}
+
+void cc_gl_rendererRotateSpriteStackCamera(float ang) {
+    mat4 a;
+    cc_mat4_rotateZ(&a, -ang);
+    cc_mat4_multiply(&ss_camera, ss_camera, a);
+    ss_camera_ang += fmod(fabs(ang),3.14159265f*2)-3.14159265f;
+}
+
 
 // 2D
 void cc_gl_rendererDrawRect(f32 x, f32 y, f32 w, f32 h) {
@@ -622,29 +656,8 @@ void cc_gl_rendererDrawTexture(CCtexture* tex, f32 x, f32 y, f32 w, f32 h, f32 s
 
 // SPRITESTACK
 void cc_gl_rendererDrawSpriteStack(CCspriteStack* stack, f32 x, f32 y, f32 z, f32 scale, f32 rotation) {
-    /*
-    // just getting this basic ahh in here temporarily
-    // TODO: optimize ts, use depth buffers, tbos, bos, vaos, etcos.
-    
-    cc_gl_rendererScale(scale,scale,1);
-
-    mat4 prev;
-    cc_rendererGetTransform(&prev);
-
-    for (f32 i = stack->layers-1; i >= 0; i -= 1.f/scale) {
-        cc_gl_rendererTranslate(-stack->texture->width * scale * .5f, -stack->layer_height * scale * .5f, 0);
-        cc_gl_rendererRotate(0,0,rotation);
-
-        cc_gl_rendererTranslate(x,y,0);
-        cc_gl_rendererTranslate(0,(i+z)*scale,0);
-
-        cc_gl_rendererDrawTexture(stack->texture, 0,0,stack->texture->width, stack->layer_height, 0, (s32)i*stack->layer_height, stack->texture->width, stack->layer_height);
-        cc_gl_rendererSetTransform(&prev);
-    }
-    */
-
     if (batch.type != CC_SPRITESTACK_BATCH_MODEL) cc_gl_rendererFlush();
-    if (batch.data_size >= CC_GL_MAX_BATCH_SIZE) cc_gl_rendererFlush();
+    if (batch.data_size + stack->layers*scale >= CC_GL_MAX_BATCH_SIZE) cc_gl_rendererFlush();
     if (!stack->texture) { printf("get a texture, bitch.\n"); exit(1); }
     if (batch.tex != stack->texture) cc_gl_rendererFlush();
 
@@ -654,10 +667,10 @@ void cc_gl_rendererDrawSpriteStack(CCspriteStack* stack, f32 x, f32 y, f32 z, f3
     mat4 rot;
     cc_mat4_rotateZ(&rot, rotation);
 
-    for (f32 i = stack->layers-1; i >= 0; i -= 1.f/scale) {
+    for (f32 i = 0; i < stack->layers; i += 1.f/scale) {
         GLinstanceData data = {
             .x = x, .y = y, .w = stack->texture->width, .h = stack->layer_height,
-            .sx = 0, .sy = (f32)((s32)stack->layer_height*i) / stack->texture->height, .sw = 1, .sh = (f32)stack->layer_height / stack->texture->height,
+            .sx = 0, .sy = (f32)(stack->layer_height*(s32)i) / stack->texture->height, .sw = 1, .sh = (f32)stack->layer_height / stack->texture->height,
             .z = z,
             .scale = scale,
             .layer = i
