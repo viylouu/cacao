@@ -1,5 +1,7 @@
 mkdir -p build
 
+./cacao/code_gen.sh || ./code_gen.sh
+
 COMPILER=("zig" "cc")
 CFLAGS="-std=c99 -Wall -Wextra -Icacao -I. -Iinclude -Icacao/include"
 

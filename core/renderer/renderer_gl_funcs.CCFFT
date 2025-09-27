@@ -1,0 +1,33 @@
+glCreateShader, GLuint, GLenum type
+glShaderSource, void, GLuint shader, GLsizei count, const GLchar* const* string, const GLint* length
+glCompileShader, void, GLuint shader
+glGetShaderiv, void, GLuint shader, GLenum pname, GLint* params
+glGetShaderInfoLog, void, GLuint shader, GLsizei bufSize, GLsizei* length, GLchar* infolog
+glDeleteShader, void, GLuint shader
+
+glCreateProgram, GLuint, void
+glAttachShader, void, GLuint program, GLuint shader
+glLinkProgram, void, GLuint program
+glGetProgramiv, void, GLuint program, GLenum pname, GLint* params
+glGetProgramInfoLog, void, GLuint program, GLsizei bufSize, GLsizei* length, GLchar* infoLog
+glDeleteProgram, void, GLuint program
+
+glGenVertexArrays, void, GLsizei n, GLuint* arrays
+glGetUniformLocation, GLint, GLuint program, const GLchar* name
+glGenBuffers, void, GLsizei n, GLuint* buffers
+glBindBuffer, void, GLenum target, GLuint buffer
+glBufferData, void, GLenum target, GLsizeiptr size, const void* data, GLenum usage
+glTexBuffer, void, GLenum target, GLenum internalformat, GLuint buffer
+
+glDeleteVertexArrays, void, GLsizei n, const GLuint* arrays
+glDeleteBuffers, void, GLsizei n, const GLuint* buffers
+
+glUseProgram, void, GLuint program
+glBindVertexArray, void, GLuint array
+glUniformMatrix4fv, void, GLint location, GLsizei count, GLboolean transpose, const GLfloat* value
+glBufferSubData, void, GLenum target, GLintptr offset, GLsizeiptr size, const void* data
+glUniform1i, void, GLint location, GLint v0
+glUniform1f, void, GLint location, GLfloat v0
+glUniform2f, void, GLint location, GLfloat v0, GLfloat v1
+glUniform4f, void, GLint location, GLfloat v0, GLfloat v1, GLfloat v2, GLfloat v3
+glDrawArraysInstanced, void, GLenum mode, GLint first, GLsizei count, GLsizei instancecount
