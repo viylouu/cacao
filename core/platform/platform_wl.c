@@ -774,6 +774,15 @@ void* cc_wl_platformInit(CCrendererApi api, const char* title, s32 targwidth, s3
 
     xkb_state_update_mask(state->xkb_state, (1 << xkb_keymap_mod_get_index(state->xkb_keymap, "Shift")), 0,0,0,0,0);
 
+    wl_display_roundtrip(state->display);
+
+    switch (api) {
+        case CC_API_VULKAN: break;
+        case CC_API_OPENGL:
+             wl_egl_window_resize(state->egl.window, state->cc.width, state->cc.height, 0,0);
+            break;
+    }
+
     return state;
 }
 
