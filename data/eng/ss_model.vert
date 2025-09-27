@@ -8,9 +8,9 @@ const vec2 verts[6] = vec2[6](
 uniform int inst_size;
 uniform samplerBuffer insts;
 uniform mat4 proj;
-uniform mat4 cam;
+uniform mat4 cam_rot;
+uniform mat4 cam_pos;
 uniform float cam_z;
-uniform float cam_ang;
 
 flat out vec4 col;
 flat out vec2 samp_pos;
@@ -54,22 +54,19 @@ void main() {
         texelFetch(insts,base+11)
     );
 
-    vec4 vpos1 = cam * vec4(
+    vec4 vpos1 = cam_pos * cam_rot * vec4(
         pos * scale,
         0,1);
 
-    vec4 vpos2 = rotation * vec4(
+    vpos1 += cam_rot * rotation * vec4(
         (vert - .5f) * size * scale, 
         0,0);
 
-    vec4 vpos3 = vec4(
-        (z + layer) * scale * vec2(0,1),
-        -((z + layer) * scale * 1e5 + (vpos1.x+vpos1.y+vpos2.x+vpos2.y)),0);
+    vec4 vpos2 = vec4(
+        ((z + layer) * scale + cam_z) * vec2(0,1),
+        -((z + layer + cam_z) * scale * 1e5 + (vpos1.x+vpos1.y)),0);
 
-    vpos2.z = 0;
-    vpos1.z = 0;
-
-    vec4 glpos = proj * transform * (vpos1 + vpos2 + vpos3);
+    vec4 glpos = proj * transform * (vpos1 + vpos2);
 
     depth = glpos.z;
 

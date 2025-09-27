@@ -17,22 +17,22 @@ void update(void) {}
 void render(void) {
     cc_rendererClear(.2,.3,.4,1);
 
-    char buf[32];
-    sprintf(buf, "%4.2f FPS", 1.f/cc_delta);
+    char buf[1024];
+    sprintf(buf, "almighty minecraft car cube item\n%4.2f FPS", 1.f/cc_delta);
 
     cc_rendererRotateSpriteStackCamera(-cc_time);
-    cc_rendererTranslateSpriteStackCamera(cc_width/2, cc_height/2, 0);
+    cc_rendererTranslateSpriteStackCamera(cc_width/2, cc_height/2, sin(cc_time*2)*128);
 
     cc_rendererSetTint(1,1,1,1);
 
-    s32 size = 12;
+    s32 size = 6;
 
     for (s32 x = -size; x < size; ++x)
         for (s32 y = -size; y < size; ++y)
             for (s32 z = -size; z < size; ++z)
-                cc_rendererDrawSpriteStack(stack, x*16, y*16, z*16, 2, cc_time);
+                cc_rendererDrawSpriteStack(stack, x*16, y*16, z*16, 2, 0);
 
-    cc_textDrawText(font, buf, 3, 0,0);
+    cc_textDrawText(font, buf, 3, 8,8);
 }
 
 void clean(void) {
