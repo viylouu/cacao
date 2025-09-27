@@ -55,4 +55,8 @@ static inline void remove_component(CCnode* node, u32 index) {
     --node->component_amt;
 }
 
+
+void cc_nodesInit(void);
+void cc_nodesUninit(void);
+
 #endif
