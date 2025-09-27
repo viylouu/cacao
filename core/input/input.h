@@ -17,8 +17,7 @@ typedef enum {
 extern f64 cc_mouse_x;
 extern f64 cc_mouse_y;
 
-extern CCkeyState cc_keyboard_keys[0x100000fd];
-extern CCkeyState cc_mouse_buttons[5]; // im too lazy to add more 
+extern CCkeyState cc_keyboard_keys[0x100000fd]; // i know its not just keyboard keys shut up
 
 #define CC_MOUSE_LEFT 272
 #define CC_MOUSE_RIGHT 273
@@ -35,8 +34,8 @@ static inline b8 cc_isKeyHeld(u32 key) { return cc_keyboard_keys[key] == CC_STAT
 static inline b8 cc_isKeyReleased(u32 key) { return cc_keyboard_keys[key] == CC_STATE_RELEASED; }
 
 
-static inline b8 cc_isMousePressed(u32 key) { return cc_mouse_buttons[key] == CC_STATE_PRESSED; }
-static inline b8 cc_isMouseHeld(u32 key) { return cc_mouse_buttons[key] == CC_STATE_HELD || cc_mouse_buttons[key] == CC_STATE_PRESSED; }
-static inline b8 cc_isMouseReleased(u32 key) { return cc_mouse_buttons[key] == CC_STATE_RELEASED; }
+static inline b8 cc_isMousePressed(u32 key) { return cc_keyboard_keys[key] == CC_STATE_PRESSED; }
+static inline b8 cc_isMouseHeld(u32 key) { return cc_keyboard_keys[key] == CC_STATE_HELD || cc_keyboard_keys[key] == CC_STATE_PRESSED; }
+static inline b8 cc_isMouseReleased(u32 key) { return cc_keyboard_keys[key] == CC_STATE_RELEASED; }
 
 #endif

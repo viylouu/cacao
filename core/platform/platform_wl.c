@@ -320,7 +320,8 @@ static void wl_pointerFrame(void* client, struct wl_pointer* pointer) {
         //printf("button %d %s ", event->button, stateSTOPFUCKINGNAMINGTHINGSSTATE);
 
         // yay no more state variable!!!!!!!!!!!!
-        cc_mouse_buttons[event->button - CC_MOUSE_LEFT] = event->state == WL_POINTER_BUTTON_STATE_RELEASED;
+        cc_keyboard_keys[event->button] = event->state == WL_POINTER_BUTTON_STATE_RELEASED;
+        cc_addDirtyKey(event->button);
     }
 
     u32 axis_events = POINTER_EVENT_AXIS

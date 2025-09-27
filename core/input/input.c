@@ -8,7 +8,6 @@ f64 cc_mouse_x;
 f64 cc_mouse_y;
 
 CCkeyState cc_keyboard_keys[0x100000fd]; 
-CCkeyState cc_mouse_buttons[5];
 
 u32* dirty_keys = NULL;
 u64 dirty_key_amt = 0;
@@ -34,12 +33,12 @@ void cc_inputPoll(void) {
         else if (cc_keyboard_keys[k] == CC_STATE_SPECIAL_RELEASED) cc_keyboard_keys[k] = CC_STATE_RELEASED;
     }
 
-    for (u32 i = 0; i < 5; ++i) {
+    /*for (u32 i = 0; i < 5; ++i) {
         if (cc_mouse_buttons[i] == CC_STATE_PRESSED) cc_mouse_buttons[i] = CC_STATE_HELD;
         else if (cc_mouse_buttons[i] == CC_STATE_RELEASED) cc_mouse_buttons[i] = CC_STATE_INACTIVE;
         else if (cc_mouse_buttons[i] == CC_STATE_SPECIAL_PRESSED) cc_mouse_buttons[i] = CC_STATE_PRESSED;
         else if (cc_mouse_buttons[i] == CC_STATE_SPECIAL_RELEASED) cc_mouse_buttons[i] = CC_STATE_RELEASED;
-    }
+    }*/
 }
 
 void cc_inputDeinit(void) {
