@@ -353,6 +353,8 @@ static void wl_pointerFrame(void* client, struct wl_pointer* pointer) {
 
     //printf("\n");
     memset(event, 0, sizeof(*event));
+
+    printf("%f\n",wl_fixed_to_double(state->pointer_event.surface_x));
 }
 
 static const struct wl_pointer_listener g_wl_pointer_listener = {
