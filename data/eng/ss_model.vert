@@ -35,7 +35,7 @@ void main() {
 
     uv = vert;
 
-    mat4 transform = mat4(
+    mat4 rotation = mat4(
         texelFetch(insts,base+3),
         texelFetch(insts,base+4),
         texelFetch(insts,base+5),
@@ -46,13 +46,6 @@ void main() {
     float z = texel7.x;
     float scale = texel7.y;
     float layer = texel7.z;
-
-    mat4 rotation = mat4(
-        texelFetch(insts,base+8),
-        texelFetch(insts,base+9),
-        texelFetch(insts,base+10),
-        texelFetch(insts,base+11)
-    );
 
     vec4 vpos1 = cam_pos * cam_rot * vec4(
         pos * scale,
@@ -66,7 +59,7 @@ void main() {
         ((z + layer) * scale + cam_z) * vec2(0,1),
         -((z + layer + cam_z) * scale * 1e5 + (vpos1.x+vpos1.y)),0);
 
-    vec4 glpos = proj * transform * (vpos1 + vpos2);
+    vec4 glpos = proj * (vpos1 + vpos2);
 
     depth = glpos.z;
 
