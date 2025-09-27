@@ -371,7 +371,7 @@ void cc_gl_rendererInit(void) {
 
     glEnable(GL_BLEND);
     glBlendFunc(GL_SRC_ALPHA, GL_ONE_MINUS_SRC_ALPHA);
-
+    
     glDepthMask(GL_TRUE);
     glDepthFunc(GL_LEQUAL);;
 
